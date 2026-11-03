@@ -1,0 +1,263 @@
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cream:#EFE7D2;--ink:#3d3f52;--muted:#7a7060;--border:#c8b99a;--card-bg:#f7f1e6;--accent:#C75B2A;}
+body{background:var(--cream);color:var(--ink);font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;min-height:100vh}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:stretch;justify-content:space-between;}
+.logo-block{padding:1.2rem 0;border-right:1px solid var(--border);padding-right:2rem;cursor:pointer}
+.logo-tag{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.3rem}
+.logo{font-family:Georgia, 'Times New Roman', serif;font-size:1.6rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+.logo span{color:var(--accent);font-style:italic}
+nav{display:flex;align-items:center}
+nav a{font-family:'Courier New', Courier, monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:0 1.2rem;height:100%;display:flex;align-items:center;border-right:1px solid var(--border);transition:color .2s;}
+nav a:hover,nav a.active{color:var(--ink)}
+.header-right{display:flex;align-items:center;padding-left:1.5rem;gap:1rem}
+.date-badge{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em}
+.city-tag{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--cream);padding:.3rem .7rem;}
+
+/* ── HERO ── */
+.hero{padding:3rem 2rem 2rem;border-bottom:1px solid var(--border);}
+.issue-tag{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem}
+.hero-title{font-family:Georgia, 'Times New Roman', serif;font-size:3.5rem;font-weight:700;line-height:1.05;letter-spacing:-.03em}
+.hero-title em{color:var(--accent);font-style:italic}
+.hero-sub{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-top:.8rem;line-height:1.8}
+.hero-stats{display:flex;gap:2rem;margin-top:1.5rem}
+.stat{text-align:center}
+.stat-n{font-family:Georgia, 'Times New Roman', serif;font-size:2rem;font-weight:700;display:block}
+.stat-l{font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+
+/* ── PAGE HERO (locali/generi) ── */
+.page-hero{padding:2rem;border-bottom:1px solid var(--border);}
+.page-hero-title{font-family:Georgia, 'Times New Roman', serif;font-size:2.5rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+.page-hero-title em{color:var(--accent);font-style:italic}
+.page-hero-sub{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-top:.6rem}
+
+/* ── SECTION BAR ── */
+.section-bar{display:flex;align-items:center;gap:1rem;padding:.7rem 2rem;border-bottom:1px solid var(--border);background:var(--ink);}
+.section-bar-label{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--cream)}
+.section-bar-line{flex:1;height:1px;background:rgba(255,255,255,.15)}
+.section-bar-date{font-family:'Courier New', Courier, monospace;font-size:10px;color:rgba(239,231,210,.5);letter-spacing:.08em}
+
+/* ── EVENT CARDS ── */
+.events-grid{padding:2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--border)}
+.event-card{background:var(--card-bg);padding:1.5rem;cursor:pointer;transition:background .2s;position:relative;overflow:hidden;}
+.event-card:hover{background:#fff}
+.event-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .25s}
+.event-card:hover::before{transform:scaleY(1)}
+.event-num{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:.5rem}
+.event-time{font-family:Georgia, 'Times New Roman', serif;font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+.event-artist{font-size:1.05rem;font-weight:600;margin:.5rem 0 .3rem;line-height:1.2}
+.event-genre-label{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem}
+.event-note{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);margin-bottom:.8rem;line-height:1.5}
+.event-meta{border-top:1px solid var(--border);padding-top:1rem;margin-top:.5rem;display:flex;flex-direction:column;gap:.4rem}
+.event-meta-row{display:flex;align-items:flex-start;gap:.6rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted)}
+.event-meta-row i{color:var(--ink);margin-top:1px;flex-shrink:0;width:12px}
+.venue-link{color:var(--ink);font-weight:600;text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:11px}
+.venue-link:hover{color:var(--accent);text-decoration:underline}
+.booking-badge{display:inline-flex;align-items:center;font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .6rem;margin-top:.4rem;line-height:1}
+.booking-yes{background:var(--ink);color:var(--cream)}
+.booking-no{border:1px solid var(--border);color:var(--muted)}
+.card-share-btn{background:none;border:1px solid var(--border);cursor:pointer;font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .6rem;color:var(--muted);display:inline-flex;align-items:center;gap:.3rem;transition:background .2s,color .2s;margin-top:.4rem;line-height:1}
+.card-share-btn:hover{background:var(--ink);color:var(--cream)}
+
+/* ── SIDE PANEL ── */
+.panel-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,20,16,.7);z-index:2000;align-items:flex-start;justify-content:flex-end;}
+.panel-overlay.open{display:flex}
+.side-panel{background:var(--cream);width:520px;max-width:100vw;height:100vh;overflow-y:auto;border-left:1px solid var(--border);animation:slideIn .3s ease;}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+.panel-header{padding:1.5rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--cream);z-index:2;display:flex;align-items:flex-start;justify-content:space-between;}
+.panel-close{background:none;border:1px solid var(--border);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--muted);flex-shrink:0;transition:background .2s;}
+.panel-close:hover{background:var(--ink);color:var(--cream)}
+.venue-name-big{font-family:Georgia, 'Times New Roman', serif;font-size:1.8rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.venue-address{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);margin-top:.4rem}
+.venue-web{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--accent);text-decoration:none;letter-spacing:.08em;margin-top:.4rem;display:inline-block}
+.venue-web:hover{text-decoration:underline}
+.panel-actions{display:flex;gap:.8rem;padding:1.2rem 2rem;border-bottom:1px solid var(--border)}
+.btn-call{background:var(--ink);color:var(--cream);border:1px solid var(--ink)}
+.btn-call:hover{background:var(--accent);border-color:var(--accent)}
+.btn-call,.btn-write,.btn-share{flex:1;padding:.7rem 1rem;font-family:'Courier New', Courier, monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:background .2s,color .2s;text-decoration:none;}
+.btn-write,.btn-share{background:transparent;color:var(--ink);border:1px solid var(--border)}
+.btn-write:hover,.btn-share:hover{background:var(--ink);color:var(--cream)}
+.panel-events-label{padding:.7rem 2rem;font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:rgba(0,0,0,.03);}
+.panel-event{border-bottom:1px solid var(--border);padding:1.2rem 2rem;display:flex;gap:1rem;align-items:flex-start}
+.panel-event-date{text-align:center;min-width:42px}
+.panel-event-day{font-family:Georgia, 'Times New Roman', serif;font-size:1.6rem;font-weight:700;line-height:1}
+.panel-event-month{font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.panel-event-info{flex:1}
+.panel-event-artist{font-size:.95rem;font-weight:600;line-height:1.2}
+.panel-event-genre{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--accent);letter-spacing:.1em;margin:.2rem 0}
+.panel-event-time{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:.4rem}
+.contact-form{padding:1.5rem 2rem;display:none}
+.contact-form.open{display:block}
+.contact-form h3{font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;font-weight:700;margin-bottom:1rem}
+.form-group{margin-bottom:1rem}
+.form-group label{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem}
+.form-group input,.form-group textarea{width:100%;padding:.7rem;background:var(--card-bg);border:1px solid var(--border);font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;font-size:.9rem;color:var(--ink);outline:none;transition:border-color .2s;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--ink)}
+.form-group textarea{min-height:100px}
+.btn-send{width:100%;padding:.8rem;background:var(--ink);color:var(--cream);border:none;font-family:'Courier New', Courier, monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.btn-send:hover{background:var(--accent)}
+.form-success{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--accent);margin-top:.8rem;text-align:center;letter-spacing:.08em}
+
+/* ── SEARCH BAR LOCALI ── */
+.locali-search-wrap{padding:1.2rem 2rem;border-bottom:1px solid var(--border);background:var(--card-bg);display:flex;align-items:center;gap:1rem;}
+.locali-search-inner{flex:1;display:flex;align-items:center;gap:.8rem;border:1px solid var(--border);background:var(--cream);padding:.6rem 1rem;transition:border-color .2s;}
+.locali-search-inner:focus-within{border-color:var(--ink)}
+.locali-search-inner i{color:var(--muted);font-size:13px;flex-shrink:0}
+.locali-search-input{flex:1;background:none;border:none;outline:none;font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--ink);letter-spacing:.05em;}
+.locali-search-input::placeholder{color:var(--border)}
+.locali-search-clear{background:none;border:none;cursor:pointer;font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:.2rem .5rem;transition:color .2s;flex-shrink:0}
+.locali-search-clear:hover{color:var(--accent)}
+.locali-search-clear.hidden{visibility:hidden}
+.locali-search-hint{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
+
+/* ── VENUE CARDS ── */
+.venues-grid{padding:2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--border)}
+.venue-card{background:var(--card-bg);padding:1.5rem;position:relative;overflow:hidden;transition:background .2s;}
+.venue-card:hover{background:#fff}
+.venue-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .25s}
+.venue-card:hover::before{transform:scaleY(1)}
+.vc-num{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:.4rem}
+.vc-tag{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
+.vc-name{font-family:Georgia, 'Times New Roman', serif;font-size:1.35rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:1rem}
+.vc-info{display:flex;flex-direction:column;gap:.5rem;border-top:1px solid var(--border);padding-top:1rem}
+.vc-row{display:flex;align-items:flex-start;gap:.6rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted)}
+.vc-row i{color:var(--ink);margin-top:1px;flex-shrink:0;width:12px}
+.vc-phone{color:var(--ink);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:11px;font-weight:600}
+.vc-phone:hover{color:var(--accent)}
+.vc-web{color:var(--accent);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:10px}
+.vc-web:hover{text-decoration:underline}
+.vc-actions{display:flex;gap:.6rem;margin-top:1rem}
+.vc-btn{flex:1;padding:.55rem;font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;text-decoration:none;transition:background .2s,color .2s;}
+.vc-btn-call{background:var(--ink);color:var(--cream);border:1px solid var(--ink)}
+.vc-btn-call:hover{background:var(--accent);border-color:var(--accent)}
+.vc-btn-events,.vc-btn-share{background:transparent;color:var(--ink);border:1px solid var(--border)}
+.vc-btn-events:hover,.vc-btn-share:hover{background:var(--ink);color:var(--cream)}
+
+/* ── GENERI ── */
+.generi-header{padding:2rem;border-bottom:1px solid var(--border);}
+.generi-title{font-family:Georgia, 'Times New Roman', serif;font-size:2.5rem;font-weight:700;letter-spacing:-.03em}
+.generi-title em{color:var(--accent);font-style:italic}
+.generi-sub{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-top:.6rem}
+.generi-tags-wrap{padding:1.5rem 2rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
+.genre-tag{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:.4rem 1rem;border:1px solid var(--border);cursor:pointer;transition:background .2s,color .2s,border-color .2s;user-select:none;}
+.genre-tag:hover{border-color:var(--ink)}
+.genre-tag.selected{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.genre-tag.selected:hover{background:var(--accent);border-color:var(--accent)}
+.genre-reset{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:.4rem .8rem;border:1px dashed var(--border);transition:color .2s;}
+.genre-reset:hover{color:var(--accent);border-color:var(--accent)}
+.generi-results-bar{display:flex;align-items:center;gap:1rem;padding:.7rem 2rem;border-bottom:1px solid var(--border);background:var(--ink);}
+.generi-results-label{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--cream)}
+.generi-results-count{font-family:'Courier New', Courier, monospace;font-size:10px;color:rgba(239,231,210,.5);letter-spacing:.08em}
+.generi-results-line{flex:1;height:1px;background:rgba(255,255,255,.15)}
+.generi-empty{padding:3rem 2rem;font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--muted);letter-spacing:.1em;text-align:center}
+.generi-empty span{display:block;font-family:Georgia, 'Times New Roman', serif;font-size:1.5rem;color:var(--border);margin-bottom:.5rem}
+
+/* ── MAPPA ── */
+.mappa-wrap{display:grid;grid-template-columns:1fr 360px;height:calc(100vh - 57px);position:relative}
+.mappa-sidebar{border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.mappa-sidebar-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--cream);z-index:2}
+.mappa-sidebar-title{font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;font-weight:700;letter-spacing:-.02em}
+.mappa-sidebar-sub{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;margin-top:.2rem}
+.mappa-venue-item{padding:1rem 1.5rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;display:flex;gap:.8rem;align-items:flex-start}
+.mappa-venue-item:hover{background:var(--card-bg)}
+.mappa-venue-item.active{background:var(--ink);color:var(--cream)}
+.mappa-venue-item.active .mvi-tag,.mappa-venue-item.active .mvi-addr{color:rgba(239,231,210,.5)}
+.mappa-venue-item.active .mvi-phone{color:var(--cream)}
+.mvi-pin{font-size:1.1rem;flex-shrink:0;margin-top:.1rem}
+.mvi-body{flex:1;min-width:0}
+.mvi-name{font-size:.9rem;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.mvi-tag{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--accent);letter-spacing:.1em;margin:.2rem 0}
+.mvi-addr{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);line-height:1.4;margin-bottom:.3rem}
+.mvi-phone{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--ink);text-decoration:none;font-weight:600}
+.mvi-phone:hover{color:var(--accent)}
+.mvi-actions{display:flex;gap:.4rem;margin-top:.6rem}
+.mvi-btn{font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;transition:background .15s,color .15s;}
+.mvi-btn-call{background:var(--ink);color:var(--cream);border:1px solid var(--ink)}
+.mvi-btn-call:hover{background:var(--accent);border-color:var(--accent)}
+.mappa-venue-item.active .mvi-btn-call{background:var(--cream);color:var(--ink);border-color:var(--cream)}
+.mappa-venue-item.active .mvi-btn-eventi{background:transparent;color:var(--cream);border-color:rgba(239,231,210,.4)}
+.mvi-btn-eventi{background:transparent;color:var(--ink);border:1px solid var(--border)}
+.mvi-btn-eventi:hover{background:var(--ink);color:var(--cream)}
+.mvi-btn-maps{background:transparent;color:var(--ink);border:1px solid var(--border)}
+.mvi-btn-maps:hover{background:var(--accent);color:var(--cream);border-color:var(--accent)}
+.mappa-venue-item.active .mvi-btn-maps{border-color:rgba(239,231,210,.4);color:var(--cream)}
+.mappa-map{flex:1;position:relative}
+.mappa-map iframe{width:100%;height:100%;border:none;display:block}
+.map-offline-notice{position:absolute;inset:auto 16px 16px 16px;z-index:800;background:rgba(61,63,82,.94);color:var(--cream);border:1px solid var(--accent);padding:10px 14px;font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:.05em;line-height:1.7;border-radius:3px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.map-offline-notice strong{display:block;color:var(--accent);font-size:11px;margin-bottom:2px}
+@media(max-width:700px){
+  .mappa-wrap{grid-template-columns:1fr;grid-template-rows:50vh 1fr;height:auto}
+  .mappa-sidebar{order:2;height:50vh}
+  .mappa-map{order:1;height:50vh}
+}
+
+/* ── CONTATTI ── */
+.contatti-wrap{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 57px)}
+.contatti-left{padding:3rem 2.5rem;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between}
+.contatti-right{padding:3rem 2.5rem;background:var(--card-bg)}
+.contatti-issue{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem}
+.contatti-title{font-family:Georgia, 'Times New Roman', serif;font-size:3rem;font-weight:700;line-height:1.05;letter-spacing:-.03em}
+.contatti-title em{color:var(--accent);font-style:italic}
+.contatti-desc{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;line-height:1.9;margin-top:1.5rem}
+.contatti-info{margin-top:2rem;display:flex;flex-direction:column;gap:1rem}
+.contatti-info-row{display:flex;align-items:flex-start;gap:.8rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted)}
+.contatti-info-row i{color:var(--ink);width:14px;flex-shrink:0;margin-top:1px}
+.contatti-info-row a{color:var(--ink);text-decoration:none;font-weight:600}
+.contatti-info-row a:hover{color:var(--accent)}
+.contatti-bottom{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--border);letter-spacing:.1em;margin-top:2rem}
+.contatti-form-title{font-family:Georgia, 'Times New Roman', serif;font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.4rem}
+.contatti-form-sub{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;margin-bottom:1.8rem}
+.contatti-form .form-group{margin-bottom:1.1rem}
+.contatti-form .form-group label{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem}
+.contatti-form .form-group input,.contatti-form .form-group textarea{width:100%;padding:.75rem;background:var(--cream);border:1px solid var(--border);font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;font-size:.9rem;color:var(--ink);outline:none;transition:border-color .2s;resize:vertical;}
+.contatti-form .form-group input:focus,.contatti-form .form-group textarea:focus{border-color:var(--ink)}
+.contatti-form .form-group textarea{min-height:130px}
+.contatti-form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.contatti-btn-send{width:100%;padding:.9rem;background:var(--ink);color:var(--cream);border:none;font-family:'Courier New', Courier, monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:background .2s;margin-top:.5rem;display:flex;align-items:center;justify-content:center;gap:.6rem}
+.contatti-btn-send:hover{background:var(--accent)}
+.contatti-success{display:none;margin-top:1rem;padding:1rem 1.2rem;border:1px solid var(--border);background:var(--cream);font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--accent);letter-spacing:.08em;text-align:center}
+@media(max-width:700px){
+  .contatti-wrap{grid-template-columns:1fr}
+  .contatti-left{border-right:none;border-bottom:1px solid var(--border);padding:2rem 1.2rem}
+  .contatti-right{padding:2rem 1.2rem}
+  .contatti-title{font-size:2.2rem}
+  .contatti-form-row{grid-template-columns:1fr}
+}
+
+/* ── CALENDARIO ── */
+.cal-hero{padding:2rem;border-bottom:1px solid var(--border);}
+.cal-picker-wrap{padding:1.2rem 2rem;border-bottom:1px solid var(--border);background:var(--card-bg);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+.cal-picker-label{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.cal-picker-inner{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.cal-date-input{font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--ink);background:var(--cream);border:1px solid var(--border);padding:.5rem .8rem;outline:none;transition:border-color .2s;cursor:pointer;}
+.cal-date-input:focus{border-color:var(--ink)}
+.cal-nav-btn{background:var(--ink);color:var(--cream);border:none;width:28px;height:28px;cursor:pointer;font-family:'Courier New', Courier, monospace;font-size:12px;display:inline-flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0}
+.cal-nav-btn:hover{background:var(--accent)}
+.cal-today-btn{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--border);padding:.3rem .7rem;cursor:pointer;transition:background .2s,color .2s;}
+.cal-today-btn:hover{background:var(--ink);color:var(--cream)}
+.cal-hint{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;margin-left:auto}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:1.2rem 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.footer-brand{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em}
+.footer-note{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--border);letter-spacing:.08em}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  header{flex-wrap:wrap;padding:0 1rem}
+  .header-right{display:none}
+  nav a{padding:0 .7rem;font-size:10px}
+  .hero,.page-hero,.generi-header{padding:1.5rem 1rem}
+  .hero-title,.page-hero-title,.generi-title{font-size:2.2rem}
+  .events-grid,.venues-grid{padding:1rem;grid-template-columns:1fr}
+  .section-bar,.generi-tags-wrap,.generi-results-bar{padding:.7rem 1rem}
+  .side-panel{width:100vw}
+}
+
+/* ── EXTRA v3 ── */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.data-error{grid-column:1/-1;padding:3rem 2rem;text-align:center;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;line-height:2.1}
+.data-error strong{display:block;font-family:Georgia, 'Times New Roman', serif;font-size:1.3rem;color:var(--ink);margin-bottom:.6rem;letter-spacing:0}
+.data-error code{background:var(--card-bg);border:1px solid var(--border);padding:.15rem .5rem;letter-spacing:.02em}
+.mvi-empty{padding:2rem 1.5rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;line-height:2;text-align:center}
