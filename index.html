@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SuonaRoma — tutti i concerti dal vivo a Roma oggi: jazz, blues, rock, folk, classica ed elettronica. L'archivio libero della musica dal vivo nella capitale.">
+<title>SuonaRoma · Oggi</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo-block" onclick="location.href='index.html'">
+    <div class="logo-tag">Vol.01 · Roma · Live</div>
+    <div class="logo">Suona<span>Roma</span></div>
+  </div>
+  <nav>
+    <a href="index.html" class="active">Oggi</a>
+    <a href="calendario.html">Calendario</a>
+    <a href="locali.html">Locali</a>
+    <a href="generi.html">Generi</a>
+    <a href="mappa.html">Mappa</a>
+    <a href="aggiungi-locale.html">+ Locale</a>
+    <a href="contatti.html">Contatti</a>
+  </nav>
+  <div class="header-right">
+    <div class="date-badge" id="live-date"></div>
+    <div class="city-tag">Roma · Live</div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="issue-tag">Palinsesto live · Edizione quotidiana · Nº 01</div>
+  <div class="hero-title">Musica <em>dal vivo</em><br>nella capitale.</div>
+  <div class="hero-sub">Concerti · Jazz · Blues · Folk · Classica · Rock · Elettronica<br>Tutti i locali di Roma in un unico archivio</div>
+  <div style="margin-top:1.5rem;padding:1.2rem 1.5rem;border-left:3px solid var(--accent);background:rgba(199,91,42,.06)">
+    <div style="font-family:Georgia, 'Times New Roman', serif;font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:.5rem">L'archivio libero della musica dal vivo</div>
+    <div style="font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);line-height:1.9;letter-spacing:.04em">Raccogliamo e organizziamo tutti gli eventi pubblici del web per aiutarti a scegliere la tua serata.<br>Nessun tracciamento, nessun cookie. Solo la musica che ami, senza sorveglianza.</div>
+  </div>
+  <div style="margin-top:1rem;font-family:Georgia, 'Times New Roman', serif;font-size:.95rem;font-style:italic;color:var(--muted)">Non siamo ancora quello che vogliamo diventare. Ma ci stiamo lavorando, ogni giorno.</div>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-n" id="stat-eventi">—</span><span class="stat-l">eventi oggi</span></div>
+    <div class="stat"><span class="stat-n" id="stat-locali">—</span><span class="stat-l">locali attivi</span></div>
+    <div class="stat"><span class="stat-n" id="stat-archivio">—</span><span class="stat-l">locali in archivio</span></div>
+  </div>
+</div>
+
+<div class="section-bar">
+  <span class="section-bar-label">◆ eventi in programma oggi &nbsp;·&nbsp; <span id="full-date"></span></span>
+  <div class="section-bar-line"></div>
+</div>
+
+<div class="events-grid" id="events-grid"></div>
+
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel(event)">
+  <div class="side-panel">
+    <div class="panel-header">
+      <div>
+        <div style="font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem" id="panel-tag"></div>
+        <div class="venue-name-big" id="panel-name"></div>
+        <div class="venue-address" id="panel-address"></div>
+        <a class="venue-web" id="panel-website" href="#" target="_blank" rel="noopener">→ Sito ufficiale</a>
+      </div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-actions">
+      <a class="btn-call" id="btn-call" href="#"><i class="fa fa-phone"></i> Chiama</a>
+      <button class="btn-write" onclick="toggleForm()"><i class="fa fa-envelope"></i> Scrivi</button>
+      <button class="btn-share" onclick="shareVenue()"><i class="fa fa-share-nodes"></i> Condividi</button>
+    </div>
+    <div class="contact-form" id="contact-form">
+      <h3>Invia un messaggio</h3>
+      <div class="form-group"><label>Oggetto</label><input type="text" id="form-oggetto" placeholder="Es. Prenotazione tavolo..."></div>
+      <div class="form-group"><label>Messaggio</label><textarea id="form-msg" placeholder="Scrivi il tuo messaggio..."></textarea></div>
+      <button class="btn-send" onclick="sendForm()">Invia messaggio</button>
+      <div class="form-success" id="form-success" style="display:none">✓ Messaggio inviato con successo.</div>
+    </div>
+    <div class="panel-events-label">Prossimi eventi</div>
+    <div id="panel-events"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">SuonaRoma è una ideazione Nycheia · © 2026</div>
+  <div class="footer-note">Dati aggiornati quotidianamente · <a href="aggiungi-locale.html" style="color:var(--accent);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.08em">+ Segnala un locale</a></div>
+</footer>
+
+<script>if(location.protocol==='file:'){document.write('<script src="data/locali.js"><\/script><script src="data/eventi.js"><\/script>');}</script>
+<script src="js/app.js"></script>
+<script>initPaginaOggi();</script>
+</body>
+</html>

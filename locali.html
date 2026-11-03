@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="L'archivio di tutti i live club di Roma: indirizzi, telefoni, siti web e prossimi eventi. Cerca per nome, quartiere o genere.">
+<title>SuonaRoma · Locali</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo-block" onclick="location.href='index.html'">
+    <div class="logo-tag">Vol.01 · Roma · Live</div>
+    <div class="logo">Suona<span>Roma</span></div>
+  </div>
+  <nav>
+    <a href="index.html">Oggi</a>
+    <a href="calendario.html">Calendario</a>
+    <a href="locali.html" class="active">Locali</a>
+    <a href="generi.html">Generi</a>
+    <a href="mappa.html">Mappa</a>
+    <a href="aggiungi-locale.html">+ Locale</a>
+    <a href="contatti.html">Contatti</a>
+  </nav>
+  <div class="header-right">
+    <div class="date-badge" id="live-date"></div>
+    <div class="city-tag">Roma · Live</div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="issue-tag">Archivio · Roma</div>
+  <div class="page-hero-title">I <em>locali</em><br>della capitale.</div>
+  <div class="page-hero-sub">Indirizzi, telefoni e prossimi eventi di tutti i live club di Roma</div>
+</div>
+
+<div class="locali-search-wrap">
+  <div class="locali-search-inner">
+    <i class="fa fa-magnifying-glass"></i>
+    <input class="locali-search-input" id="locali-search" type="text"
+      placeholder="Cerca per nome, indirizzo, quartiere o genere…"
+      oninput="filterVenues(this.value)">
+    <button class="locali-search-clear hidden" id="locali-clear" onclick="clearVenueSearch()">✕ cancella</button>
+  </div>
+  <span class="locali-search-hint" id="locali-hint"></span>
+</div>
+
+<div class="section-bar">
+  <span class="section-bar-label" id="locali-bar-label">◆ tutti i locali</span>
+  <div class="section-bar-line"></div>
+  <span class="section-bar-date" id="locali-count"></span>
+</div>
+
+<div class="venues-grid" id="venues-grid"></div>
+
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel(event)">
+  <div class="side-panel">
+    <div class="panel-header">
+      <div>
+        <div style="font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem" id="panel-tag"></div>
+        <div class="venue-name-big" id="panel-name"></div>
+        <div class="venue-address" id="panel-address"></div>
+        <a class="venue-web" id="panel-website" href="#" target="_blank" rel="noopener">→ Sito ufficiale</a>
+      </div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-actions">
+      <a class="btn-call" id="btn-call" href="#"><i class="fa fa-phone"></i> Chiama</a>
+      <button class="btn-write" onclick="toggleForm()"><i class="fa fa-envelope"></i> Scrivi</button>
+      <button class="btn-share" onclick="shareVenue()"><i class="fa fa-share-nodes"></i> Condividi</button>
+    </div>
+    <div class="contact-form" id="contact-form">
+      <h3>Invia un messaggio</h3>
+      <div class="form-group"><label>Oggetto</label><input type="text" id="form-oggetto" placeholder="Es. Prenotazione tavolo..."></div>
+      <div class="form-group"><label>Messaggio</label><textarea id="form-msg" placeholder="Scrivi il tuo messaggio..."></textarea></div>
+      <button class="btn-send" onclick="sendForm()">Invia messaggio</button>
+      <div class="form-success" id="form-success" style="display:none">✓ Messaggio inviato con successo.</div>
+    </div>
+    <div class="panel-events-label">Prossimi eventi</div>
+    <div id="panel-events"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">SuonaRoma è una ideazione Nycheia · © 2026</div>
+  <div class="footer-note">Dati aggiornati quotidianamente · <a href="aggiungi-locale.html" style="color:var(--accent);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.08em">+ Segnala un locale</a></div>
+</footer>
+
+<script>if(location.protocol==='file:'){document.write('<script src="data/locali.js"><\/script><script src="data/eventi.js"><\/script>');}</script>
+<script src="js/app.js"></script>
+<script>initPaginaLocali();</script>
+</body>
+</html>

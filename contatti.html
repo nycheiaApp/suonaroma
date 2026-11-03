@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Contatta la redazione di SuonaRoma: segnala locali, eventi o proponi una collaborazione.">
+<title>SuonaRoma · Contatti</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo-block" onclick="location.href='index.html'">
+    <div class="logo-tag">Vol.01 · Roma · Live</div>
+    <div class="logo">Suona<span>Roma</span></div>
+  </div>
+  <nav>
+    <a href="index.html">Oggi</a>
+    <a href="calendario.html">Calendario</a>
+    <a href="locali.html">Locali</a>
+    <a href="generi.html">Generi</a>
+    <a href="mappa.html">Mappa</a>
+    <a href="aggiungi-locale.html">+ Locale</a>
+    <a href="contatti.html" class="active">Contatti</a>
+  </nav>
+  <div class="header-right">
+    <div class="date-badge" id="live-date"></div>
+    <div class="city-tag">Roma · Live</div>
+  </div>
+</header>
+
+<div class="contatti-wrap">
+  <div class="contatti-left">
+    <div>
+      <div class="contatti-issue">SuonaRoma · Roma · Live</div>
+      <div class="contatti-title">Scrivici.<br>Siamo <em>qui</em>.</div>
+      <div class="contatti-desc">
+        Hai un locale da segnalare?<br>
+        Un evento che non abbiamo in archivio?<br>
+        Una collaborazione da proporci?<br><br>
+        Scrivici — risponderemo il prima possibile.
+      </div>
+      <div class="contatti-info">
+        <div class="contatti-info-row"><i class="fa fa-envelope"></i><a href="mailto:nycheia@proton.me">nycheia@proton.me</a></div>
+        <div class="contatti-info-row"><i class="fa fa-map-marker-alt"></i><span>Roma, Italia</span></div>
+        <div class="contatti-info-row"><i class="fa fa-music"></i><span>Archivio musica dal vivo · Aggiornato quotidianamente</span></div>
+      </div>
+    </div>
+    <div class="contatti-bottom">SuonaRoma è una ideazione Nycheia · © 2026 · Tutti i diritti riservati</div>
+  </div>
+  <div class="contatti-right">
+    <div class="contatti-form-title">Invia un messaggio</div>
+    <div class="contatti-form-sub">Compila il form — ti risponderemo il prima possibile</div>
+    <div class="contatti-form">
+      <div class="contatti-form-row">
+        <div class="form-group"><label>Nome</label><input type="text" id="c-nome" placeholder="Il tuo nome"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="c-email" placeholder="La tua email"></div>
+      </div>
+      <div class="form-group"><label>Oggetto</label><input type="text" id="c-oggetto" placeholder="Es. Segnalazione locale, collaborazione…"></div>
+      <div class="form-group"><label>Messaggio</label><textarea id="c-msg" placeholder="Scrivi il tuo messaggio…"></textarea></div>
+      <button class="contatti-btn-send" onclick="sendContatti()"><i class="fa fa-paper-plane"></i> Invia messaggio</button>
+      <div class="contatti-success" id="contatti-success">✓ Messaggio inviato con successo — ti risponderemo presto.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">SuonaRoma è una ideazione Nycheia · © 2026</div>
+  <div class="footer-note">Dati aggiornati quotidianamente · <a href="aggiungi-locale.html" style="color:var(--accent);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.08em">+ Segnala un locale</a></div>
+</footer>
+
+<script>if(location.protocol==='file:'){document.write('<script src="data/locali.js"><\/script><script src="data/eventi.js"><\/script>');}</script>
+<script src="js/app.js"></script>
+<script>initPaginaContatti();</script>
+</body>
+</html>

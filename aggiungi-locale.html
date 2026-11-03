@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Segnala un locale con musica dal vivo a Roma che non è ancora nell'archivio di SuonaRoma.">
+<title>SuonaRoma · Aggiungi un locale</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .aggiungi-wrap{display:grid;grid-template-columns:1fr 2fr;min-height:calc(100vh - 57px)}
+  .aggiungi-left{padding:3rem 2.5rem;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;background:var(--card-bg)}
+  .aggiungi-right{padding:3rem 2.5rem}
+  .aggiungi-issue{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem}
+  .aggiungi-title{font-family:Georgia, 'Times New Roman', serif;font-size:2.5rem;font-weight:700;line-height:1.05;letter-spacing:-.03em}
+  .aggiungi-title em{color:var(--accent);font-style:italic}
+  .aggiungi-desc{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;line-height:1.9;margin-top:1.5rem}
+  .aggiungi-note{margin-top:2rem;padding:1rem 1.2rem;border-left:3px solid var(--accent);background:rgba(199,91,42,.06)}
+  .aggiungi-note p{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);line-height:1.8;letter-spacing:.05em}
+  .aggiungi-bottom{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--border);letter-spacing:.1em;margin-top:2rem}
+
+  .form-section{margin-bottom:2rem}
+  .form-section-title{font-family:Georgia, 'Times New Roman', serif;font-size:1.1rem;font-weight:700;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+  .form-section-title i{color:var(--accent);font-size:.9rem}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+  .form-full{grid-column:1/-1}
+  .form-group{margin-bottom:0}
+  .form-group label{font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem}
+  .form-group label span{color:var(--accent)}
+  .form-group input,.form-group textarea,.form-group select{
+    width:100%;padding:.7rem;background:var(--cream);border:1px solid var(--border);
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;font-size:.9rem;color:var(--ink);
+    outline:none;transition:border-color .2s;resize:vertical;
+  }
+  .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--ink)}
+  .form-group textarea{min-height:80px}
+  .form-group select{cursor:pointer;background-image:none}
+  .form-group .hint{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--muted);margin-top:.3rem;letter-spacing:.06em}
+
+  .generi-select{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+  .genere-chip{font-family:'Courier New', Courier, monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .7rem;border:1px solid var(--border);cursor:pointer;transition:background .2s,color .2s;user-select:none;}
+  .genere-chip:hover{border-color:var(--ink)}
+  .genere-chip.sel{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+
+  .btn-invia{
+    width:100%;padding:1rem;background:var(--ink);color:var(--cream);border:none;
+    font-family:'Courier New', Courier, monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:.7rem;
+    margin-top:1.5rem;
+  }
+  .btn-invia:hover{background:var(--accent)}
+  .form-required-note{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--muted);letter-spacing:.08em;margin-top:.8rem;text-align:right}
+
+  @media(max-width:700px){
+    .aggiungi-wrap{grid-template-columns:1fr}
+    .aggiungi-left{border-right:none;border-bottom:1px solid var(--border);padding:2rem 1.2rem}
+    .aggiungi-right{padding:1.5rem 1.2rem}
+    .aggiungi-title{font-size:2rem}
+    .form-grid,.form-grid-3{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block" onclick="location.href='index.html'">
+    <div class="logo-tag">Vol.01 · Roma · Live</div>
+    <div class="logo">Suona<span>Roma</span></div>
+  </div>
+  <nav>
+    <a href="index.html">Oggi</a>
+    <a href="calendario.html">Calendario</a>
+    <a href="locali.html">Locali</a>
+    <a href="generi.html">Generi</a>
+    <a href="mappa.html">Mappa</a>
+    <a href="aggiungi-locale.html" class="active">+ Locale</a>
+    <a href="contatti.html">Contatti</a>
+  </nav>
+  <div class="header-right">
+    <div class="date-badge" id="live-date"></div>
+    <div class="city-tag">Roma · Live</div>
+  </div>
+</header>
+
+<div class="aggiungi-wrap">
+
+  <!-- COLONNA SINISTRA -->
+  <div class="aggiungi-left">
+    <div>
+      <div class="aggiungi-issue">SuonaRoma · Archivio aperto</div>
+      <div class="aggiungi-title">Conosci un<br><em>locale</em><br>che manca?</div>
+      <div class="aggiungi-desc">
+        Aiutaci a rendere l'archivio più completo.<br>
+        Segnalaci un locale che fa musica dal vivo<br>
+        a Roma e non è ancora presente nel sito.<br><br>
+        Verificheremo le informazioni e lo aggiungeremo<br>
+        il prima possibile.
+      </div>
+      <div class="aggiungi-note">
+        <p>
+          I campi contrassegnati con <span style="color:var(--accent)">*</span> sono obbligatori.<br>
+          Più informazioni fornisci, più velocemente<br>
+          potremo aggiungere il locale all'archivio.
+        </p>
+      </div>
+    </div>
+    <div class="aggiungi-bottom">SuonaRoma è una ideazione Nycheia · © 2026</div>
+  </div>
+
+  <!-- COLONNA DESTRA -->
+  <div class="aggiungi-right">
+
+    <!-- DATI PRINCIPALI -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fa fa-location-dot"></i> Dati del locale</div>
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label>Nome del locale <span>*</span></label>
+          <input type="text" id="f-nome" placeholder="Es. Alexanderplatz Jazz Club">
+        </div>
+        <div class="form-group form-full">
+          <label>Indirizzo <span>*</span></label>
+          <input type="text" id="f-indirizzo" placeholder="Es. Via Ostia 9 – Prati, Roma">
+        </div>
+        <div class="form-group">
+          <label>Quartiere / Zona</label>
+          <input type="text" id="f-zona" placeholder="Es. Trastevere, Pigneto, EUR…">
+        </div>
+        <div class="form-group">
+          <label>Telefono</label>
+          <input type="tel" id="f-telefono" placeholder="Es. +39 06 123456">
+        </div>
+        <div class="form-group form-full">
+          <label>Sito web</label>
+          <input type="url" id="f-website" placeholder="Es. https://www.nomelocale.it">
+        </div>
+        <div class="form-group form-full">
+          <label>Email del locale</label>
+          <input type="email" id="f-email" placeholder="Es. info@nomelocale.it">
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPO E GENERI -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fa fa-music"></i> Musica e tipologia</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Tipo di locale <span>*</span></label>
+          <select id="f-tipo">
+            <option value="">— Seleziona —</option>
+            <option>Live Club</option>
+            <option>Jazz Club</option>
+            <option>Pub / Live Club</option>
+            <option>Auditorium</option>
+            <option>Arena / Grande Venue</option>
+            <option>Cocktail Lounge</option>
+            <option>Club su Barca</option>
+            <option>Spazio Polivalente</option>
+            <option>Circolo Arci</option>
+            <option>Ristorante / Live</option>
+            <option>Bar / Live Club</option>
+            <option>Teatro</option>
+            <option>Altro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Capienza (persone)</label>
+          <input type="number" id="f-capienza" placeholder="Es. 200">
+        </div>
+        <div class="form-group form-full">
+          <label>Generi musicali <span>*</span></label>
+          <div class="generi-select" id="generi-chips"></div>
+          <div class="hint">Clicca per selezionare uno o più generi</div>
+        </div>
+        <div class="form-group form-full">
+          <label>Descrizione breve</label>
+          <textarea id="f-descrizione" placeholder="Descrivi il locale in 2-3 righe: storia, atmosfera, programmazione tipica…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRAMMAZIONE -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fa fa-calendar"></i> Programmazione</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Giorni con musica live</label>
+          <input type="text" id="f-giorni" placeholder="Es. Venerdì e sabato, Tutti i giorni…">
+        </div>
+        <div class="form-group">
+          <label>Orario tipico inizio concerti</label>
+          <input type="text" id="f-orario" placeholder="Es. 21:30">
+        </div>
+        <div class="form-group form-full">
+          <label>Note aggiuntive</label>
+          <textarea id="f-note" placeholder="Prenotazione obbligatoria? Ingresso a pagamento? Tessera richiesta? Altre info utili…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- MITTENTE -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fa fa-user"></i> Chi segnala</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Il tuo nome</label>
+          <input type="text" id="f-mittente-nome" placeholder="Il tuo nome">
+        </div>
+        <div class="form-group">
+          <label>La tua email</label>
+          <input type="email" id="f-mittente-email" placeholder="per eventuali aggiornamenti">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-invia" onclick="inviaLocale()">
+      <i class="fa fa-paper-plane"></i> Invia segnalazione
+    </button>
+    <div class="form-required-note"><span style="color:var(--accent)">*</span> campi obbligatori</div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">SuonaRoma è una ideazione Nycheia · © 2026</div>
+  <div class="footer-note">Dati aggiornati quotidianamente</div>
+</footer>
+
+<script>if(location.protocol==='file:'){document.write('<script src="data/locali.js"><\/script><script src="data/eventi.js"><\/script>');}</script>
+<script src="js/app.js"></script>
+<script>
+  // Inizializza data header
+  initDate();
+
+  // Generi disponibili
+  const GENERI = ['Jazz','Blues','Rock','Pop','Indie','Folk','Classica','Elettronica','Metal','R&B','Soul','Funk','Swing','Latino','Country','Sperimentale','Contemporanea'];
+  const selGeneri = new Set();
+
+  function buildChips() {
+    document.getElementById('generi-chips').innerHTML = GENERI.map(g =>
+      `<span class="genere-chip${selGeneri.has(g)?' sel':''}" onclick="toggleChip('${g}')">${g}</span>`
+    ).join('');
+  }
+
+  function toggleChip(g) {
+    selGeneri.has(g) ? selGeneri.delete(g) : selGeneri.add(g);
+    buildChips();
+  }
+
+  function inviaLocale() {
+    const nome     = document.getElementById('f-nome').value.trim();
+    const indirizzo= document.getElementById('f-indirizzo').value.trim();
+    const tipo     = document.getElementById('f-tipo').value;
+
+    if(!nome || !indirizzo || !tipo || selGeneri.size === 0) {
+      alert('Compila i campi obbligatori: nome, indirizzo, tipo di locale e almeno un genere musicale.');
+      return;
+    }
+
+    const zona      = document.getElementById('f-zona').value.trim();
+    const telefono  = document.getElementById('f-telefono').value.trim();
+    const website   = document.getElementById('f-website').value.trim();
+    const email     = document.getElementById('f-email').value.trim();
+    const capienza  = document.getElementById('f-capienza').value.trim();
+    const descr     = document.getElementById('f-descrizione').value.trim();
+    const giorni    = document.getElementById('f-giorni').value.trim();
+    const orario    = document.getElementById('f-orario').value.trim();
+    const note      = document.getElementById('f-note').value.trim();
+    const mitNome   = document.getElementById('f-mittente-nome').value.trim();
+    const mitEmail  = document.getElementById('f-mittente-email').value.trim();
+
+    const body =
+`SEGNALAZIONE NUOVO LOCALE – SuonaRoma
+══════════════════════════════════════
+
+DATI PRINCIPALI
+───────────────
+Nome:        ${nome}
+Indirizzo:   ${indirizzo}${zona ? '\nZona:        ' + zona : ''}${telefono ? '\nTelefono:    ' + telefono : ''}${website ? '\nSito web:    ' + website : ''}${email ? '\nEmail:       ' + email : ''}
+
+MUSICA E TIPOLOGIA
+──────────────────
+Tipo:        ${tipo}${capienza ? '\nCapienza:    ' + capienza + ' persone' : ''}
+Generi:      ${[...selGeneri].join(', ')}${descr ? '\n\nDescrizione:\n' + descr : ''}
+
+PROGRAMMAZIONE
+──────────────${giorni ? '\nGiorni:      ' + giorni : ''}${orario ? '\nOrario:      ' + orario : ''}${note ? '\n\nNote:\n' + note : ''}
+
+CHI SEGNALA
+───────────${mitNome ? '\nNome:        ' + mitNome : ''}${mitEmail ? '\nEmail:       ' + mitEmail : ''}
+
+──────────────────────────────────────
+Inviato da SuonaRoma · ${new Date().toLocaleDateString('it-IT')}`;
+
+    const mailto = `mailto:nycheia@proton.me`
+      + `?subject=${encodeURIComponent('Aggiungi locale: ' + nome)}`
+      + `&body=${encodeURIComponent(body)}`;
+
+    window.location.href = mailto;
+  }
+
+  buildChips();
+</script>
+</body>
+</html>
