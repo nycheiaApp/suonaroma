@@ -1,0 +1,178 @@
+{
+ "eseguito_il": "2026-11-03T13:07:44+01:00",
+ "giorni_avanzo": 120,
+ "locali_aggiornati": 1,
+ "locali_totali": 24,
+ "eventi_totali": 647,
+ "dettaglio": [
+  {
+   "id": 1,
+   "nome": "Alexanderplatz Jazz Club",
+   "fonte": null,
+   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: saltato (non WordPress); jsonld: 0 eventi)",
+   "estratti": 0
+  },
+  {
+   "id": 2,
+   "nome": "Auditorium Parco della Musica",
+   "fonte": "html_apm",
+   "stato": "ok",
+   "estratti": 13,
+   "rimossi_vecchi": 13
+  },
+  {
+   "id": 3,
+   "nome": "Casa del Jazz",
+   "fonte": null,
+   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: 0 eventi; jsonld: 0 eventi)",
+   "estratti": 0
+  },
+  {
+   "id": 4,
+   "nome": "Big Mama Blues Club",
+   "fonte": null,
+   "stato": "disattivato: il dominio bigmama.it reindirizza a un sito non correlato al locale (accademiadeipazienti.org): serve un nuovo URL ufficiale",
+   "estratti": 0
+  },
+  {
+   "id": 5,
+   "nome": "Fonclea",
+   "fonte": null,
+   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: saltato (non WordPress); jsonld: 0 eventi)",
+   "estratti": 0
+  },
+  {
+   "id": 6,
+   "nome": "Largo Venue",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 7,
+   "nome": "Vinile",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 8,
+   "nome": "Stazione Birra",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 9,
+   "nome": "CrossRoads Live Club",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 10,
+   "nome": "Geronimo's Live Music Club",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 11,
+   "nome": "Palazzo dello Sport (PalaEur)",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 12,
+   "nome": "Alcazar Live",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 13,
+   "nome": "Atlantico Live",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 14,
+   "nome": "Argot",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 15,
+   "nome": "Blackmarket Hall",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 16,
+   "nome": "Lian Club",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 17,
+   "nome": "Monk Club",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 18,
+   "nome": "Fanfulla 5/a",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 19,
+   "nome": "Al Muretto",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 20,
+   "nome": "Traffic Live",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 21,
+   "nome": "Wishlist Club",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 22,
+   "nome": "Orion Club",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 23,
+   "nome": "L'Asino che Vola",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  },
+  {
+   "id": 24,
+   "nome": "Trenta Formiche",
+   "fonte": null,
+   "stato": "sito non raggiungibile",
+   "estratti": 0
+  }
+ ]
+}

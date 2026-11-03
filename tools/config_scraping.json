@@ -1,0 +1,17 @@
+{
+  "impostazioni": {
+    "user_agent": "SuonaRoma-bot/1.0 (aggiornamento eventi del sito SuonaRoma; contatto: nycheia@proton.me)",
+    "timeout_s": 12,
+    "tentativi": 1,
+    "pausa_s": 0.4,
+    "giorni_avanzo": 120,
+    "max_eventi_locale": 60,
+    "parallelo": 8
+  },
+  "locali": {
+    "2": { "strategie": ["html_apm"], "nota": "parser dedicato alle schede event-card di auditorium.com (REST e iCal disabilitati)" },
+    "4": { "attivo": false, "motivo": "il dominio bigmama.it reindirizza a un sito non correlato al locale (accademiadeipazienti.org): serve un nuovo URL ufficiale" },
+    "1": { "nota": "sito custom in JavaScript: le strategie standard probabilmente non estraggono nulla" },
+    "5": { "nota": "contenuti caricati via JavaScript: le strategie standard probabilmente non estraggono nulla" }
+  }
+}
