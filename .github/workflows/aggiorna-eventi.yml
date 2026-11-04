@@ -21,14 +21,16 @@ concurrency:
 
 jobs:
   aggiorna:
-    runs-on: ubuntu-latest
+    # ubuntu-24.04 fissato esplicitamente: il tag ubuntu-latest sta migrando
+    # a Ubuntu 26 (avviso di GitHub, ott. 2026) e così l'ambiente resta stabile.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout del repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7   # v4 usa Node.js 20, in dismissione dai runner
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7   # idem: v5 usava Node.js 20
         with:
           python-version: '3.12'
 
@@ -39,19 +41,21 @@ jobs:
           echo "Ora italiana corrente: $H"
           echo "esegui=$([[ "$H" == "14" ]] && echo sì || echo no)" >> "$GITHUB_OUTPUT"
 
+      # L'estrazione parte alle 14:00 (ora di Roma) nei run programmati;
+      # nei run manuali (workflow_dispatch) parte sempre, per i test.
       - name: Estrazione eventi dai siti dei locali
-        if: steps.orario.outputs.esegui == 'sì'
+        if: steps.orario.outputs.esegui == 'sì' || github.event_name == 'workflow_dispatch'
         run: python3 tools/aggiorna_eventi.py
 
       - name: Riepilogo nell'esecuzione
-        if: steps.orario.outputs.esegui == 'sì'
+        if: steps.orario.outputs.esegui == 'sì' || github.event_name == 'workflow_dispatch'
         run: |
           if [ -f tools/report.md ]; then
             cat tools/report.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Commit e push (solo se i dati sono cambiati)
-        if: steps.orario.outputs.esegui == 'sì'
+        if: steps.orario.outputs.esegui == 'sì' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "suonaroma-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
