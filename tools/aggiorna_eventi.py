@@ -24,6 +24,11 @@ locale, la prima che dà risultati vince):
   · html_songkick — pagina venue di songkick.com (JSON-LD MusicEvent)
   · html_romatoday — pagina "location" di romatoday.it (data nello
                  slug dell'articolo, titolo nel blocco <a>)
+  · html_atlantico — parser dedicato a atlanticoliveroma.it ('EVENTI
+                 IN PROGRAMMA': titolo in <strong>, data completa
+                 con anno)
+  · html_vinile — parser dedicato a vinileroma.it (serate 'Gio 5 nov'
+                 con titolo e link di dettaglio; live dalle 22.30)
 
 Integrazione con l'archivio (modalità "solo futuro"):
 l'archivio contiene ESCLUSIVAMENTE eventi da oggi in poi. Per ogni
@@ -540,7 +545,8 @@ def normalizza(raw, venue):
 # ── fonti alternative (aggregatori) ─────────────────────────
 RCHALLENGE = re.compile(r'(?i)just a moment|un momento, per favore|attention required|'
                         r'cdn-cgi/challenge|attendi che la tua richiesta|checking your browser')
-DIRETTE = {'ical', 'wp_json', 'jsonld', 'html_apm', 'html_cdj', 'html_wix', 'html_testo'}
+DIRETTE = {'ical', 'wp_json', 'jsonld', 'html_apm', 'html_cdj', 'html_wix',
+           'html_testo', 'html_atlantico', 'html_vinile'}
 
 def _ldjson(html):
     """Yield dei dizionari JSON-LD di una pagina (con @graph espanso)."""
@@ -649,6 +655,192 @@ def estrai_romatoday(slug, venue_nome, scadenza):
             filtrati.append(e)
     return filtrati
 
+
+def estrai_atlantico(url, html0, scadenza, cfgl=None):
+    """Parser per atlanticoliveroma.it: la homepage elenca i concerti
+    come blocco con il titolo in grassetto (<strong>ARTISTA</strong>)
+    seguito da un elenco puntato con la data COMPLETA ('7 Novembre
+    2026'), il nome della location e i link info/biglietti. La data ha
+    sempre l'anno: nessuna ricostruzione."""
+    vcfg = cfgl or {}
+    salta = [re.compile(p, re.I) for p in (vcfg.get('salta_righe') or
+             [r'atlantico', r'eventi in programma', r'^(?:per )?info\b',
+              r'clicca', r'acquist', r'bigliett', r'\b(?:via|viale|piazza)\s+\w'])]
+    txt = re.sub(r'(?is)<(script|style|noscript|header|footer).*?</\1>', ' ', html0)
+    txt = htmllib.unescape(re.sub(r'(?s)<[^>]+>', '\n', txt)).replace('\u00a0', ' ')
+    righe = [r.strip() for r in txt.split('\n') if r.strip()]
+    evs, prese = [], set()
+    for i, r in enumerate(righe):
+        dm = re.match(r'(\d{1,2})\s+([a-zàèéìòù]+)\s+(\d{4})'
+                      r'(?:[·,;\s]+ore?\s+(\d{1,2})[.:](\d{2}))?', r, re.I)
+        if not dm or dm.group(2).lower() not in MESI_IT:
+            continue
+        artista = ''
+        for j in range(i - 1, max(-1, i - 4), -1):   # il titolo sta subito sopra la data
+            x = righe[j]
+            if re.match(r'^(?:(?:lun|mar|mer|gio|ven|sab|dom)\.?\s+)?\d{1,2}\s+[a-zàèéìòù]+\s+\d{4}', x, re.I):
+                break                                # data precedente: blocco senza titolo
+            if any(p.search(x) for p in salta):
+                continue                             # righe di servizio: si risale
+            if 2 <= len(x) <= 90:
+                artista = x
+                break
+        if not artista:
+            continue
+        try:
+            dt = datetime(int(dm.group(3)), MESI_IT[dm.group(2).lower()], int(dm.group(1)))
+        except ValueError:
+            continue
+        if dm.group(4):
+            dt = dt.replace(hour=int(dm.group(4)) % 24, minute=int(dm.group(5)))
+        chiave = (dt.date(), artista.casefold())
+        if chiave in prese:
+            continue
+        prese.add(chiave)
+        evs.append({'dt': dt, 'sum': artista, 'desc': '', 'url': '', 'loc': '',
+                    'ticket': bool(re.search(r'acquist|bigliett', html0, re.I))})
+    return evs
+
+
+def estrai_vinile(url, html0, scadenza, cfgl=None):
+    """Parser per vinileroma.it: le serate sono elencate come blocchi
+    'Gio 5 nov' + titolo della serata + ('Live ARTISTA' / 'DJ set ...')
+    + link 'Vedi la serata'. La data non ha l'anno: si assume l'anno
+    corrente e, se la data risulta già passata, quello successivo.
+    Se la pagina iniziale non dà risultati prova anche /programma."""
+    vcfg = cfgl or {}
+    salta = [re.compile(p, re.I) for p in (vcfg.get('salta_righe') or
+             [r'line-?up in arrivo', r'^vedi la serata', r'^aperitivo', r'^cena\b',
+              r'^club\b', r'^pista', r'tutto il programma', r'^prenota', r'lista',
+              r'bigliett', r'^\d+$', r'^→$'])]
+    RE_DATA = re.compile(r'(?i)(lun|mar|mer|gio|ven|sab|dom)[\s,]*(\d{1,2})\s*·?\s*'
+                         r'(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)[a-zàèéìòù]*')
+
+    def da_html(html, base):
+        out = []
+        for m in RE_DATA.finditer(html):
+            if time.monotonic() > scadenza:
+                break
+            g, mese = int(m.group(2)), MESI_BREVI[m.group(3).lower()]
+            anno = oggi().year
+            if date(anno, mese, g) < oggi():
+                anno += 1
+            try:
+                dt = datetime(anno, mese, g)
+            except ValueError:
+                continue
+            chunk = html[m.end():m.end() + 2500]
+            testo = htmllib.unescape(re.sub(r'(?s)<[^>]+>', '\n', chunk)).replace('\u00a0', ' ')
+            righe = [r.strip() for r in testo.split('\n') if r.strip()]
+            titolo, desc = '', ''
+            for x in righe[:10]:
+                if re.match(r'(?i)^(?:(?:lun|mar|mer|gio|ven|sab|dom)\.?\s+)?\d{1,2}\s+'
+                            r'(?:gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)', x):
+                    break                        # è iniziata la serata successiva
+                if any(p.search(x) for p in salta):
+                    continue
+                if not titolo and 2 <= len(x) <= 60:
+                    titolo = x
+                    continue
+                if titolo and not desc and 2 <= len(x) <= 100 and re.match(r'^(?:live|dj ?set)\b', x, re.I):
+                    desc = x
+                    break
+            if not titolo:
+                continue
+            lu = re.search(r'href="([^"]+)"', chunk)
+            out.append({'dt': dt, 'sum': titolo, 'desc': desc,
+                        'url': urllib.parse.urljoin(base, lu.group(1)) if lu else '',
+                        'loc': '', 'ticket': bool(lu)})
+        return out
+
+    base = base_url(url)
+    evs = da_html(html0, base)
+    if not evs and time.monotonic() < scadenza:
+        pg = urllib.parse.urljoin(base, '/programma')
+        evs = da_html(get_text(pg), pg)
+    # gli stessi blocchi possono comparire più volte (home + widget): dedup
+    out, visti = [], set()
+    for e in evs:
+        k = (e['dt'].date(), e['sum'].casefold())
+        if k in visti:
+            continue
+        visti.add(k)
+        out.append(e)
+    return out
+
+# ── deduplica globale (novità v9) ────────────────────────────
+# Lo stesso spettacolo può comparire con due titoli diversi (fonti
+# diverse, o doppi rimasti in archivio da estrazioni passate: es.
+# 'Masini in concerto al Palazzo dello Sport' e 'Marco Masini tour
+# 2026 al Palazzo dello Sport'). A fine run, a parità di locale e
+# data, si fondono gli eventi i cui artisti condividono le stesse
+# parole significative. Se entrambi hanno un orario reale (non
+# mezzanotte) e diverso, restano due show distinti.
+_STOPW_ART = {'in','al','alla','ai','con','di','del','della','dei','dal',
+              'vivo','live','dj','set','tour','concerto','concerti',
+              'speciale','serata','serate','roma','palazzo','dello',
+              'delle','sala','teatro','estate'}
+
+def _token_artista(nome):
+    t = re.sub(r'[^\w\sàèéìòù]', ' ', (nome or '').lower())
+    return {w for w in t.split() if len(w) > 2 and w not in _STOPW_ART and not w.isdigit()}
+
+def _pulisci_coda_titolo(nome, venue_nome):
+    """Toglie le code di servizio: 'in concerto al …', 'tour 2026 al …'."""
+    t = (nome or '').strip()
+    code = [venue_nome or '']
+    m2 = re.match(r'([^()]+?)\s*\(', venue_nome or '')
+    if m2: code.append(m2.group(1).strip())
+    for nv in code:
+        if not nv: continue
+        t = re.sub(r'\s*(?:tour\s+\d{4}|in concerto|dal vivo|live)?\s+al\s+'
+                   + re.escape(nv) + r'\s*$', '', t, flags=re.I).strip()
+    t = re.sub(r'\s+(?:in concerto|dal vivo|live)\s*$', '', t, flags=re.I).strip()
+    t = re.sub(r'\s+tour\s+\d{4}\s*$', '', t, flags=re.I).strip()
+    return t
+
+def fusi_doppioni(eventi, nomi_venue):
+    """Fonde i doppioni (stesso locale, stessa data, stesso spettacolo).
+    Ritorna (eventi_fusi, numero_doppioni_eliminati)."""
+    fuori, fusi = [], 0
+    gruppi = {}
+    for e in eventi:
+        gruppi.setdefault((e.get('venueId'), e.get('data')), []).append(e)
+    for chiave, gruppo in gruppi.items():
+        vn = nomi_venue.get(chiave[0], '')
+        resta = []
+        for e in sorted(gruppo, key=lambda x: x['ora']):
+            tok = _token_artista(e.get('artista', ''))
+            doppio = None
+            for x in resta:
+                xt = _token_artista(x.get('artista', ''))
+                if not tok or not xt: continue
+                unione = tok | xt
+                sim = len(tok & xt) / len(unione) if unione else 0
+                if sim < 0.6 and not (tok <= xt or xt <= tok):
+                    continue
+                if x['ora'] != '00:00' and e['ora'] != '00:00' and x['ora'] != e['ora']:
+                    continue          # orari reali diversi: due show distinti
+                doppio = x
+                break
+            if doppio is None:
+                resta.append(e)
+                continue
+            fusi += 1
+            cand = [(_pulisci_coda_titolo(doppio['artista'], vn), doppio),
+                    (_pulisci_coda_titolo(e['artista'], vn), e)]
+            best = max(cand, key=lambda c: len(c[0]))[0]
+            doppio['artista'] = best or doppio['artista']
+            if not doppio.get('note') and e.get('note'):
+                doppio['note'] = e['note']
+            elif e.get('note') and len(e['note']) > len(doppio.get('note') or ''):
+                doppio['note'] = e['note']
+            doppio['prenotazione'] = bool(doppio.get('prenotazione')) or bool(e.get('prenotazione'))
+            if doppio['ora'] == '00:00' and e['ora'] != '00:00':
+                doppio['ora'] = e['ora']
+        fuori.extend(resta)
+    return fuori, fusi
+
 # ── per-locale ───────────────────────────────────────────────
 def estrai_locale(v):
     cfgl = CFG.get('locali', {}).get(str(v['id']), {})
@@ -698,6 +890,8 @@ def estrai_locale(v):
                    'html_cdj':    lambda: estrai_cdj_article(url, html0, scadenza),
                    'html_wix':    lambda: estrai_wix_json(url, html0, scadenza),
                    'html_testo':  lambda: estrai_testo(url, html0, scadenza, cfgl),
+                   'html_atlantico': lambda: estrai_atlantico(url, html0, scadenza, cfgl),
+                   'html_vinile': lambda: estrai_vinile(url, html0, scadenza, cfgl),
                    'html_zero':   lambda: estrai_zero(cfgl['zero'], scadenza),
                    'html_songkick': lambda: estrai_songkick(cfgl['songkick'], v['nome'], scadenza),
                    'html_romatoday': lambda: estrai_romatoday(cfgl['romatoday'], v['nome'], scadenza)}[s]()
@@ -748,18 +942,22 @@ def main():
             print(f"  · {v['nome'][:34]:34} {stato[:74]} — dati attuali invariati ({len(presenti)})")
 
     nuovi = [e for e in nuovi if e['data'] >= og]   # doppia sicurezza: nessun evento passato
+    nomi_venue = {v['id']: v['nome'] for v in locali}
+    nuovi, doppioni_fusi = fusi_doppioni(nuovi, nomi_venue)
+    if doppioni_fusi:
+        print(f"\n  ⚗ doppioni fusi: {doppioni_fusi} (stesso locale, stessa data, stesso spettacolo)")
     nuovi.sort(key=lambda e: (e['data'], e['ora'], e['venueId']))
     ok = sum(1 for r in report if r['stato'] == 'ok')
 
     rep = {'eseguito_il': datetime.now(TZ).isoformat(timespec='seconds') if TZ else datetime.now().isoformat(timespec='seconds'),
            'giorni_avanzo': GG_MAX, 'locali_aggiornati': ok, 'locali_totali': len(report),
            'eventi_totali': len(nuovi), 'eventi_passati_eliminati': passati_eliminati,
-           'dettaglio': report}
+           'doppioni_fusi': doppioni_fusi, 'dettaglio': report}
     (BASE / 'tools' / 'report.json').write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding='utf-8')
 
     righe = ['# Rapporto aggiornamento eventi SuonaRoma', '', f"- Eseguito il: **{rep['eseguito_il']}** (ora italiana)",
              f"- Locali aggiornati: **{ok} / {len(report)}**", f"- Eventi totali in archivio: **{len(nuovi)}** (solo da oggi in poi)",
-             f"- Eventi passati eliminati: **{passati_eliminati}**", '', '| Locale | Fonte / stato | Eventi |', '|---|---|---|']
+             f"- Eventi passati eliminati: **{passati_eliminati}**", f"- Doppioni fusi: **{doppioni_fusi}**", '', '| Locale | Fonte / stato | Eventi |', '|---|---|---|']
     for r in report:
         righe.append(f"| {r['nome']} | {r['fonte'] or r['stato']} | {r['estratti']} |")
     (BASE / 'tools' / 'report.md').write_text('\n'.join(righe) + '\n', encoding='utf-8')

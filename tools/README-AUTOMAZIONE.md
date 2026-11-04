@@ -74,6 +74,12 @@ data/eventi.json e data/eventi.js con un commit automatico.
    mai vuoto); gli eventi che diventano passati vengono eliminati
    automaticamente a ogni esecuzione. L'estrazione copre 365
    giorni avanti, fino a 120 eventi per locale.
+ · DEDUPLICA GLOBALE (v9): a fine run, a parità di locale e data,
+   gli eventi doppi (stesso spettacolo con titoli diversi, es.
+   "Masini in concerto al …" e "Marco Masini tour 2026 al …") si
+   fondono in un unico evento; se entrambi hanno un orario reale e
+   diverso restano due show distinti. Il numero di fusioni è nel
+   rapporto ("Doppioni fusi").
  · Se i dati non cambiano, nessun commit (il repo resta pulito).
  · Il rapporto dell'ultima esecuzione è in tools/report.md e viene
    mostrato anche nella pagina dell'esecuzione di Actions.
