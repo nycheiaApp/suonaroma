@@ -7,28 +7,44 @@ Aggiorna data/eventi.json collegandosi ai siti ufficiali dei locali
 (vedi data/locali.json). Solo librerie standard di Python: nessuna
 dipendenza da installare, funziona in GitHub Actions così com'è.
 
-Strategie di estrazione (provate nell'ordine, la prima che dà
-risultati vince):
-  · ical    — feed calendario iCal (.ics) dei siti WordPress con
-              "The Events Calendar" e di qualsiasi altro sito che
-              pubblica un link ?ical=1 / .ics
-  · wp_json — API REST di The Events Calendar (/wp-json/tribe/...)
-  · jsonld  — dati strutturati schema.org (Event / MusicEvent)
-              dentro le pagine di elenco
+Strategie di estrazione (provate nell'ordine configurato per ogni
+locale, la prima che dà risultati vince):
+  · ical       — feed calendario iCal (.ics) dei siti WordPress con
+                 "The Events Calendar" e di qualsiasi altro sito che
+                 pubblica un link ?ical=1 / .ics
+  · wp_json    — API REST di The Events Calendar (/wp-json/tribe/...)
+  · jsonld     — dati strutturati schema.org (Event / MusicEvent)
+  · html_apm   — parser dedicato alle card di auditorium.com
+  · html_cdj   — parser dedicato agli articoli di casadeljazz.com
+  · html_wix   — parser per i siti Wix (eventi in JSON dentro <script>)
+  · html_testo — scansione generica del testo: riga-data italiana
+                 seguita dalla riga col nome dell'artista
+  · html_zero  — zero.eu, pagina "luogo" del locale (JSON-LD con
+                 l'elenco degli eventi in programma)
+  · html_songkick — pagina venue di songkick.com (JSON-LD MusicEvent)
+  · html_romatoday — pagina "location" di romatoday.it (data nello
+                 slug dell'articolo, titolo nel blocco <a>)
 
-Integrazione con l'archivio esistente (modalità "sostituisci futuro"):
-per ogni locale estratto con successo gli eventi con data di OGGI in
-poi vengono rimpiazzati dai dati freschi; il passato resta come
-storico. I locali la cui fonte non risponde NON vengono toccati.
+Integrazione con l'archivio (modalità "solo futuro"):
+l'archivio contiene ESCLUSIVAMENTE eventi da oggi in poi. Per ogni
+locale estratto con successo gli eventi futuri vengono rimpiazzati
+dai dati freschi; i locali la cui fonte non risponde mantengono i
+propri eventi futuri; gli eventi che diventano passati vengono
+eliminati automaticamente ad ogni esecuzione (nessuno storico).
+
+Diagnostica: quando un sito non risponde, il rapporto indica LA CAUSA
+(DNS inesistente, timeout, HTTP 403 anti-bot, errore SSL...), non solo
+"sito non raggiungibile".
 
 Output:
   · data/eventi.json           — dati aggiornati
   · data/eventi.js             — specchio per apertura via file://
   · tools/report.json / .md    — rapporto dell'esecuzione
 
-Uso:  python3 tools/aggiorna_eventi.py [--giorni=120] [--solo-report]
+Uso:  python3 tools/aggiorna_eventi.py [--giorni=365] [--solo-report]
 """
-import json, re, ssl, sys, time, html as htmllib
+import json, re, socket, ssl, sys, threading, time, gzip, html as htmllib
+import http.cookiejar as cj
 import urllib.request, urllib.error, urllib.parse
 import concurrent.futures as cf
 from datetime import date, datetime, timedelta
@@ -37,10 +53,14 @@ from pathlib import Path
 BASE   = Path(__file__).resolve().parent.parent   # cartella suonaroma/
 CFG    = json.loads((BASE / 'tools' / 'config_scraping.json').read_text(encoding='utf-8'))
 SETT   = CFG.get('impostazioni', {})
-UA     = SETT.get('user_agent', 'SuonaRoma-bot/1.0 (aggiornamento eventi; contatto: vedi README-AUTOMAZIONE)')
-TIMEO  = SETT.get('timeout_s', 25)
-TENT   = SETT.get('tentativi', 2)
-PAUSA  = SETT.get('pausa_s', 1.0)
+# UA da browser: molti hosting italiani bloccano gli user-agent da bot
+# con 403 prima ancora di guardare la pagina. Si può cambiare in config.
+UA     = SETT.get('user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                'Chrome/131.0.0.0 Safari/537.36')
+TIMEO  = SETT.get('timeout_s', 15)
+TENT   = SETT.get('tentativi', 1)
+PAUSA  = SETT.get('pausa_s', 0.4)
 GG_MAX = SETT.get('giorni_avanzo', 120)
 CAP    = SETT.get('max_eventi_locale', 60)
 PAR    = SETT.get('parallelo', 8)
@@ -52,6 +72,32 @@ CTX = ssl.create_default_context()
 CTX.check_hostname = False
 CTX.verify_mode = ssl.CERT_NONE
 
+HEADER_HTTP = {
+    'User-Agent': UA,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
+    'Accept-Encoding': 'gzip, deflate',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'sec-ch-ua': '"Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+}
+
+# Sessione per-thread con cookie: alcuni server li usano per la prima
+# risposta (e talvolta la sfida "ricarica la pagina" passa al secondo colpo).
+_TLS = threading.local()
+
+def opener():
+    if getattr(_TLS, 'op', None) is None:
+        _TLS.op = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(cj.CookieJar()),
+            urllib.request.HTTPSHandler(context=CTX))
+    return _TLS.op
+
 try:
     from zoneinfo import ZoneInfo
     TZ = ZoneInfo('Europe/Rome')
@@ -62,16 +108,45 @@ def oggi():
     return datetime.now(TZ).date() if TZ else date.today()
 
 # ── rete ─────────────────────────────────────────────────────
+ERR_ULTIMO = {}          # url → causa dell'ultimo errore (per il rapporto)
+
+def spiega(ex):
+    """Traduce un'eccezione di rete in una breve causa leggibile."""
+    if isinstance(ex, urllib.error.HTTPError):
+        c = ex.code
+        if c in (403, 429):     return f'HTTP {c} (blocco anti-bot o limite richieste)'
+        if c == 404:            return 'HTTP 404 (pagina non trovata)'
+        if 500 <= c < 600:      return f'HTTP {c} (errore interno del server)'
+        return f'HTTP {c}'
+    causa = getattr(ex, 'reason', ex)
+    if isinstance(causa, socket.gaierror):  return 'DNS: il dominio non risolve (inesistente o rimosso)'
+    if isinstance(causa, ssl.SSLError):     return 'errore certificato SSL'
+    s = str(causa).lower()
+    if isinstance(causa, TimeoutError) or 'timed out' in s: return f'timeout (nessuna risposta entro {TIMEO}s)'
+    if 'unreachable' in s:                  return 'rete non raggiungibile'
+    if 'refused' in s:                      return 'connessione rifiutata'
+    if 'reset' in s:                        return 'connessione interrotta dal server'
+    return type(causa).__name__
+
 def get(url, t=TIMEO):
-    """GET con User-Agent e retry; ritorna bytes ('' se fallisce)."""
+    """GET con header da browser, cookie di sessione e gestione gzip;
+    ritorna bytes ('' se fallisce) e registra in ERR_ULTIMO la causa."""
     for i in range(TENT):
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': '*/*'})
-            with urllib.request.urlopen(req, timeout=t, context=CTX) as r:
+            req = urllib.request.Request(url, headers=HEADER_HTTP)
+            with opener().open(req, timeout=t) as r:
                 data = r.read()
+                enc = (r.headers.get('Content-Encoding') or '').lower()
+            if enc == 'gzip':
+                data = gzip.decompress(data)
+            elif enc == 'deflate':
+                import zlib
+                try:    data = zlib.decompress(data)
+                except Exception: data = zlib.decompress(data, -zlib.MAX_WBITS)
             time.sleep(PAUSA)
             return data
-        except Exception:
+        except Exception as ex:
+            ERR_ULTIMO[url] = spiega(ex)
             if i == TENT - 1: return b''
             time.sleep(PAUSA * 2)
     return b''
@@ -94,7 +169,7 @@ GENERI = [
     ('Classica / Opera',    r'classica|sinfon|orchestra|opera|pianoforte solo'),
     ('Folk / Country',      r'folk|country|bluegrass|celtic'),
     ('Latino / World',      r'latino|salsa|bachata|reggae|afrobeat|world'),
-    ('Cover / Tribute',     r'tribute|cover band|omaggio a'),
+    ('Cover / Tribute',     r'tribute|cover band|omaggio a|tributo'),
 ]
 def classifica(t):
     t = (t or '').lower()
@@ -194,7 +269,7 @@ def estrai_ical(base, html0, scadenza):
         if time.monotonic() > scadenza: break
         if u in visti: continue
         visti.add(u)
-        ics = get_text(u, t=12)
+        ics = get_text(u)
         if 'BEGIN:VEVENT' not in ics: continue
         eventi = parse_ics(ics)
         if eventi: break
@@ -205,7 +280,7 @@ def estrai_wp_json(base, scadenza):
     while p <= 3 and time.monotonic() < scadenza:
         u = f"{base}/wp-json/tribe/events/v1/events?per_page=40&paged={p}&start_date={oggi().isoformat()}"
         try:
-            d = json.loads(get_text(u, t=12) or '{}')
+            d = json.loads(get_text(u) or '{}')
         except Exception:
             break
         evs = d.get('events') or []
@@ -248,7 +323,7 @@ def estrai_jsonld(url, html0, scadenza):
     da_pagina(html0)
     if not eventi and time.monotonic() < scadenza:
         pg = urllib.parse.urljoin(url, 'eventi/')
-        da_pagina(get_text(pg, t=12))
+        da_pagina(get_text(pg))
     return eventi
 
 # ── parser dedicati ──────────────────────────────────────────
@@ -292,7 +367,154 @@ def estrai_apm_card(url, html0, scadenza, pagine=3):
     for p in range(2, pagine + 1):
         if time.monotonic() > scadenza or not evs: break
         pg = urllib.parse.urljoin(url, f'page/{p}/')
-        da_html(get_text(pg, t=12))
+        da_html(get_text(pg))
+    return evs
+
+def estrai_cdj_article(url, html0, scadenza):
+    """Parser per casadeljazz.com: WordPress con elenco server-side di
+    <article class="loop-element ... evento ..."> contenenti il titolo
+    (<a title="...">), la data in <div class="event-date"> ('7 Novembre
+    2026, ore 19:30') e il luogo in <div class="event-location">."""
+    evs = []
+    for m in re.finditer(r'<article[^>]*class="[^"]*\bevento\b[^"]*"[^>]*>(.*?)(?=<article\b|$)', html0, re.S | re.I):
+        if time.monotonic() > scadenza: break
+        blocco = m.group(1)
+        t = re.search(r'<a[^>]+title="([^"]+)"', blocco, re.I)
+        titolo = pulisci(t.group(1)) if t else ''
+        d = re.search(r'class="event-date".*?(\d{1,2})\s+([a-zàèéìòù]+)\s+(\d{4})(?:,?\s*ore\s+(\d{1,2})[.:](\d{2}))?', blocco, re.S | re.I) \
+            or re.search(r'(\d{1,2})\s+([a-zàèéìòù]+)\s+(\d{4})(?:,?\s*ore\s+(\d{1,2})[.:](\d{2}))?', blocco, re.I)
+        if not (titolo and d) or d.group(2).lower() not in MESI_IT: continue
+        try:
+            dt = datetime(int(d.group(3)), MESI_IT[d.group(2).lower()], int(d.group(1)))
+        except ValueError:
+            continue
+        if d.group(4): dt = dt.replace(hour=int(d.group(4)) % 24, minute=int(d.group(5)))
+        loc = re.search(r'class="event-location"[^>]*>\s*<a[^>]*>(.*?)</a>', blocco, re.S | re.I)
+        biglietti = bool(re.search(r'bigliett|ticket|dice\.fm|vivaout', blocco, re.I))
+        evs.append({'dt': dt, 'sum': titolo, 'desc': '', 'url': '',
+                    'loc': pulisci(re.sub(r'<[^>]+>', ' ', loc.group(1))) if loc else '',
+                    'ticket': biglietti})
+    return evs
+
+MESI_BREVI = {'gen': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'mag': 5, 'giu': 6,
+              'lug': 7, 'ago': 8, 'set': 9, 'ott': 10, 'nov': 11, 'dic': 12}
+
+def estrai_wix_json(url, html0, scadenza):
+    """Parser per i siti Wix con widget Eventi (es. alexanderplatzjazz.com).
+    1) Card HTML: <span data-hook="ev-list-item-title">TITOLO</span> seguita
+       da data-hook="date" ('03 nov 2026, 20:00 – 04 nov 2026, 00:00'),
+       data-hook="location" e link RSVP all'evento.
+    2) Fallback: blob JSON 'events' dentro <script> con startDate ISO."""
+    evs = []
+    for m in re.finditer(r'<span[^>]*data-hook="ev-list-item-title"[^>]*>(.*?)</span>', html0, re.S | re.I):
+        if time.monotonic() > scadenza: break
+        titolo = pulisci(re.sub(r'<[^>]+>', ' ', m.group(1)))
+        chunk = html0[m.end():m.end() + 3000]
+        dd = re.search(r'data-hook="date"[^>]*>([^<]+)<', chunk, re.I)
+        if not (titolo and dd): continue
+        dm = re.search(r'(\d{1,2})\s+([a-zàèéìòù]{3})\.?\s+(\d{4})(?:,\s*(\d{1,2})[.:](\d{2}))?', htmllib.unescape(dd.group(1)), re.I)
+        if not dm or dm.group(2).lower() not in MESI_BREVI: continue
+        try:
+            dt = datetime(int(dm.group(3)), MESI_BREVI[dm.group(2).lower()], int(dm.group(1)))
+        except ValueError:
+            continue
+        if dm.group(4): dt = dt.replace(hour=int(dm.group(4)) % 24, minute=int(dm.group(5)))
+        lu = re.search(r'data-hook="ev-rsvp-button"[^>]*href="([^"]+)"', chunk, re.I) \
+             or re.search(r'href="(https?://[^" ]*event-details[^"]*)"', chunk, re.I)
+        lo = re.search(r'data-hook="location"[^>]*>([^<]+)<', chunk, re.I)
+        evs.append({'dt': dt, 'sum': titolo, 'desc': '',
+                    'url': lu.group(1) if lu else '',
+                    'loc': pulisci(lo.group(1)) if lo else '', 'ticket': bool(lu)})
+    if evs: return evs
+    # fallback: blob JSON dentro <script>
+    def cerca(o, prof=0):
+        if prof > 14 or time.monotonic() > scadenza: return
+        if isinstance(o, dict):
+            cfg  = o.get('config') if isinstance(o.get('config'), dict) else {}
+            data = o.get('date')   if isinstance(o.get('date'), dict)   else {}
+            dcfg = data.get('config') if isinstance(data.get('config'), dict) else {}
+            sd = cfg.get('startDate') or o.get('startDate') or dcfg.get('startDate')
+            if sd and o.get('title'):
+                evs.append((o, str(sd)))
+            for v in o.values(): cerca(v, prof + 1)
+        elif isinstance(o, list):
+            for v in o: cerca(v, prof + 1)
+    for m in re.finditer(r'<script[^>]*>(.*?)</script>', html0, re.S | re.I):
+        if time.monotonic() > scadenza: break
+        corpo = m.group(1)
+        if len(corpo) < 2000 or ('startDate' not in corpo and '"events"' not in corpo):
+            continue
+        dec = json.JSONDecoder()
+        idx = corpo.find('"events"')
+        idx = corpo.find('[', idx) if idx >= 0 else corpo.find('{')
+        if idx < 0: continue
+        try:
+            obj, _ = dec.raw_decode(corpo, idx)
+        except Exception:
+            continue
+        cerca(obj)
+        if evs: break
+    out = []
+    for o, sd in evs[:CAP * 3]:
+        try: dt = datetime.fromisoformat(sd.replace('Z', '+00:00'))
+        except Exception: continue
+        out.append({'dt': dt, 'sum': pulisci(o.get('title')),
+                    'desc': pulisci(o.get('description') or o.get('about') or ''),
+                    'url': '', 'loc': '',
+                    'ticket': bool(re.search(r'ticket', json.dumps(o)[:3000], re.I))})
+    return out
+
+def estrai_testo(url, html0, scadenza, cfgl=None):
+    """Scansione generica del testo per siti che elencano gli eventi
+    come testo semplice: una riga con la data italiana ('5 novembre
+    2026', 'Mar 03 Novembre', '27 Ottobre 2026, ore 21:00') seguita a
+    breve dalla riga col nome dell'artista. Config per locale:
+      · nome_venue  — regex delle righe da ignorare (nome del locale,
+                      indirizzi, 'ACQUISTA IL BIGLIETTO', ...)"""
+    vcfg = cfgl or {}
+    salta = [re.compile(p, re.I) for p in
+             (vcfg.get('salta_righe') or
+              [r'^(?:per )?info\b', r'clicca', r'acquist', r'bigliett',
+               r'^ore\s+\d', r'^(?:dalle|alle|h\.)\s*\d', r'\b(?:via|viale|piazza)\s+\w',
+               r'^\+?\d[\d\s.]{7,}$', r'ingresso', r'\beur\b'])]
+    if vcfg.get('nome_venue'):
+        salta.append(re.compile(vcfg['nome_venue'], re.I))
+    txt = re.sub(r'(?is)<(script|style|noscript|header|footer).*?</\1>', ' ', html0)
+    txt = htmllib.unescape(re.sub(r'(?s)<[^>]+>', '\n', txt)).replace('\u00a0', ' ')
+    righe = [r.strip() for r in txt.split('\n') if r.strip()]
+    evs = []
+    i = 0
+    while i < len(righe):
+        dm = re.match(r'^(?:(?:lun|mar|mer|gio|ven|sab|dom)\.?\s+)?(\d{1,2})\s+([a-zàèéìòù]+)(?:\s+(\d{4}))?(?:\s*,?\s*ore\s+(\d{1,2})[.:](\d{2}))?', righe[i], re.I)
+        if not dm or dm.group(2).lower() not in MESI_IT:
+            i += 1
+            continue
+        anno = int(dm.group(3) or oggi().year)
+        if not dm.group(3):                        # senza anno: se già passata, è del prossimo anno
+            tent = date(anno, MESI_IT[dm.group(2).lower()], int(dm.group(1)))
+            if tent < oggi(): anno += 1
+        try:
+            dt = datetime(anno, MESI_IT[dm.group(2).lower()], int(dm.group(1)))
+        except ValueError:
+            i += 1
+            continue
+        if dm.group(4): dt = dt.replace(hour=int(dm.group(4)) % 24, minute=int(dm.group(5)))
+        artista, bigl, j = '', False, i + 1
+        while j < min(i + 5, len(righe)):
+            nx = righe[j]
+            if re.match(r'^(?:(?:lun|mar|mer|gio|ven|sab|dom)\.?\s+)?\d{1,2}\s+[a-zàèéìòù]+', nx, re.I) \
+               and nx.lower() not in ('ore',) and not re.match(r'^ore\s+\d', nx, re.I):
+                break                              # è iniziato l'evento successivo
+            if re.search(r'ore\s+(\d{1,2})[.:](\d{2})', nx, re.I) and not dt.hour:
+                om = re.search(r'ore\s+(\d{1,2})[.:](\d{2})', nx, re.I)
+                dt = dt.replace(hour=int(om.group(1)) % 24, minute=int(om.group(2)))
+            if re.search(r'bigliett|acquist', nx, re.I): bigl = True
+            if not artista and 2 <= len(nx) <= 90 and not any(p.search(nx) for p in salta):
+                artista = nx
+            j += 1
+        if artista:
+            evs.append({'dt': dt, 'sum': artista, 'desc': '', 'url': '', 'loc': '', 'ticket': bigl})
+        i = j
     return evs
 
 def normalizza(raw, venue):
@@ -307,9 +529,125 @@ def normalizza(raw, venue):
     note = ''
     if descr and descr.lower() != artista.lower(): note = descr[:140]
     elif loc and loc.lower() not in venue['nome'].lower(): note = loc
+    ora = dt.strftime('%H:%M')
+    if ora == '00:00':
+        od = (CFG.get('locali', {}).get(str(venue['id']), {}) or {}).get('ora_default')
+        if od: ora = str(od)
     return {'venueId': venue['id'], 'data': dt.strftime('%Y-%m-%d'),
-            'ora': dt.strftime('%H:%M'), 'artista': artista,
+            'ora': ora, 'artista': artista,
             'genere': classifica(txt), 'prenotazione': biglietti, 'note': note}
+
+# ── fonti alternative (aggregatori) ─────────────────────────
+RCHALLENGE = re.compile(r'(?i)just a moment|un momento, per favore|attention required|'
+                        r'cdn-cgi/challenge|attendi che la tua richiesta|checking your browser')
+DIRETTE = {'ical', 'wp_json', 'jsonld', 'html_apm', 'html_cdj', 'html_wix', 'html_testo'}
+
+def _ldjson(html):
+    """Yield dei dizionari JSON-LD di una pagina (con @graph espanso)."""
+    for blocco in re.findall(r'<script[^>]*application/ld\+json[^>]*>(.*?)</script>', html, re.S | re.I):
+        try:
+            data = json.loads(blocco.strip().rstrip(';') or 'null')
+        except Exception:
+            continue
+        graph = data.get('@graph', [data]) if isinstance(data, dict) else data
+        if isinstance(graph, list):
+            for it in graph:
+                if isinstance(it, dict): yield it
+
+def estrai_zero(url, scadenza):
+    """zero.eu — pagina "luogo": il JSON-LD contiene un array 'events'
+    con gli eventi in programma (nome, ISO startDate, descrizione)."""
+    html = get_text(url)
+    if not html: return []
+    out = []
+    for it in _ldjson(html):
+        for ev in it.get('events') or []:
+            if not isinstance(ev, dict): continue
+            sd = str(ev.get('startDate', '') or '')
+            if not sd: continue
+            try: dt = datetime.fromisoformat(sd.replace('Z', '+00:00'))
+            except Exception: continue
+            out.append({'dt': dt, 'sum': str(ev.get('name', '') or ''),
+                        'desc': str(ev.get('description', '') or ''),
+                        'url': str(ev.get('url', '') or ''), 'loc': '',
+                        'ticket': bool(ev.get('url'))})
+    return out
+
+def estrai_songkick(slug, venue_nome, scadenza):
+    """songkick.com — pagina venue con JSON-LD MusicEvent (futuri e
+    passati: il filtro data avviene in normalizza). Il nome evento
+    spesso finisce con ' @ Nome Venue': viene tolto."""
+    html = get_text('https://www.songkick.com/venues/' + slug)
+    if not html: return []
+    out = []
+    for it in _ldjson(html):
+        if 'MusicEvent' not in str(it.get('@type', '')): continue
+        sd = str(it.get('startDate', '') or '')
+        if not sd: continue
+        try: dt = datetime.fromisoformat(sd.replace('Z', '+00:00'))
+        except Exception: continue
+        nome = re.sub(r'\s*@\s*' + re.escape(venue_nome) + r'\s*$', '',
+                      str(it.get('name', '') or ''), flags=re.I)
+        out.append({'dt': dt, 'sum': nome, 'desc': '',
+                    'url': str(it.get('url', '') or ''), 'loc': '',
+                    'ticket': bool(it.get('url'))})
+    return out
+
+def estrai_romatoday(slug, venue_nome, scadenza):
+    """romatoday.it — pagina 'location': link <a href="/eventi/<titolo>-
+    <gg>-<mese>-<anno>.html"> con il titolo in un nodo di testo interno;
+    la data sta nello slug dell'articolo. Il sito limita le richieste
+    ripetute: un secondo tentativo dopo una pausa se la prima risposta
+    è vuota."""
+    url = 'https://www.romatoday.it/eventi/location/' + slug
+    html = get_text(url)
+    if not html and time.monotonic() < scadenza:
+        time.sleep(3)
+        html = get_text(url)
+    if not html: return []
+    out, visti = [], set()
+    for m in re.finditer(r'href="(/eventi/[^"#?]*\.html)"', html):
+        if time.monotonic() > scadenza: break
+        href = m.group(1)
+        dm = re.search(r'-(\d{1,2})-([a-zàèéìòù]+)-(\d{4})\.html$', href, re.I)
+        if not dm or dm.group(2).lower() not in MESI_IT: continue
+        d, mese, anno = int(dm.group(1)), dm.group(2).lower(), int(dm.group(3))
+        chunk = html[m.end():m.end() + 2000]
+        fine = chunk.find('</a>')
+        corpo = chunk[:fine] if fine >= 0 else chunk[:800]
+        candidati = [pulisci(x) for x in re.findall(r'>([^<>]{3,120})<', corpo)]
+        titolo = next((c for c in candidati if len(c) >= 3
+                       and not re.fullmatch(r'[\s\d.,€%]+', c)), '')
+        if not titolo: continue
+        chiave = (anno, mese, d, titolo.casefold())
+        if chiave in visti: continue
+        visti.add(chiave)
+        # 'Masini in concerto al Palazzo dello Sport' → 'Masini'
+        # (prova col nome completo e con quello senza la parte tra parentesi)
+        m2 = re.match(r'([^()]+?)\s*\(', venue_nome)
+        base_t = titolo
+        for nv in [venue_nome] + ([m2.group(1).strip()] if m2 else []):
+            t2 = re.sub(r'\s*(?:in concerto|dal vivo)?\s+al\s+' + re.escape(nv) + r'\s*$',
+                        '', base_t, flags=re.I).strip()
+            if t2: base_t = t2
+        base_t = re.sub(r'\s+(?:in concerto|dal vivo)\s*$', '', base_t, flags=re.I).strip()
+        try: dt = datetime(anno, MESI_IT[mese], d)
+        except ValueError: continue
+        out.append({'dt': dt, 'sum': base_t or titolo, 'desc': '',
+                    'url': 'https://www.romatoday.it' + href, 'loc': '', 'ticket': True})
+    # articoli doppi dello stesso spettacolo ('Masini…' vs 'Marco Masini tour…'):
+    # a parità di data resta il titolo più completo
+    filtrati = []
+    for e in out:
+        doppio = next((x for x in filtrati
+                       if x['dt'].date() == e['dt'].date() and
+                       (e['sum'].casefold() in x['sum'].casefold() or
+                        x['sum'].casefold() in e['sum'].casefold())), None)
+        if doppio:
+            if len(e['sum']) > len(doppio['sum']): filtrati[filtrati.index(doppio)] = e
+        else:
+            filtrati.append(e)
+    return filtrati
 
 # ── per-locale ───────────────────────────────────────────────
 def estrai_locale(v):
@@ -319,21 +657,50 @@ def estrai_locale(v):
     url = cfgl.get('url') or v.get('website') or ''
     if not url: return [], 'nessun sito', None
     base = base_url(url)
-    scadenza = time.monotonic() + 50          # budget massimo per locale
-    html0 = get_text(url, t=12) if time.monotonic() < scadenza else ''
+    scadenza = time.monotonic() + 65          # budget massimo per locale
+    html0 = get_text(url) if time.monotonic() < scadenza else ''
+    # fallback: se il dominio non risponde, prova con/senza "www."
+    if not html0 and time.monotonic() < scadenza:
+        alt = url.replace('://www.', '://') if '://www.' in url else url.replace('://', '://www.', 1)
+        if alt != url:
+            html0 = get_text(alt)
+            if html0:
+                url, base = alt, base_url(alt)
+    # sito ufficiale bloccato (protezione anti-bot o risposta anomala):
+    # si annota la causa, si azzera l'HTML e si proseguono comunque le
+    # fonti alternative (zero.eu, songkick, romatoday) come ripiego
+    blocco = ''
+    if html0 and len(html0) < 800:
+        blocco = (f'sito ufficiale: risposta anomala ({len(html0)} caratteri — '
+                  'probabile protezione anti-bot)')
+        html0 = ''
+    elif html0 and RCHALLENGE.search(html0):
+        blocco = 'sito ufficiale protetto da verifica anti-bot (challenge JavaScript)'
+        html0 = ''
     wp = bool(re.search(r'wp-json|wp-content|tribe', html0, re.I))
-    strat = cfgl.get('strategie', ['ical', 'wp_json', 'jsonld'])
+    strat = cfgl.get('strategie', ['ical', 'wp_json', 'jsonld', 'html_testo'])
     tentato = []
     for s in strat:
         if time.monotonic() > scadenza: break
+        if s in DIRETTE and not html0:
+            continue                       # strategie che leggono html0: niente da leggere
         if s == 'wp_json' and not wp:
             tentato.append('wp_json: saltato (non WordPress)')
             continue
+        if s == 'html_zero' and not cfgl.get('zero'): continue
+        if s == 'html_songkick' and not cfgl.get('songkick'): continue
+        if s == 'html_romatoday' and not cfgl.get('romatoday'): continue
         try:
-            raw = {'ical':      lambda: estrai_ical(base, html0, scadenza),
-                   'wp_json':   lambda: estrai_wp_json(base, scadenza),
-                   'jsonld':    lambda: estrai_jsonld(url, html0, scadenza),
-                   'html_apm':  lambda: estrai_apm_card(url, html0, scadenza)}[s]()
+            raw = {'ical':        lambda: estrai_ical(base, html0, scadenza),
+                   'wp_json':     lambda: estrai_wp_json(base, scadenza),
+                   'jsonld':      lambda: estrai_jsonld(url, html0, scadenza),
+                   'html_apm':    lambda: estrai_apm_card(url, html0, scadenza),
+                   'html_cdj':    lambda: estrai_cdj_article(url, html0, scadenza),
+                   'html_wix':    lambda: estrai_wix_json(url, html0, scadenza),
+                   'html_testo':  lambda: estrai_testo(url, html0, scadenza, cfgl),
+                   'html_zero':   lambda: estrai_zero(cfgl['zero'], scadenza),
+                   'html_songkick': lambda: estrai_songkick(cfgl['songkick'], v['nome'], scadenza),
+                   'html_romatoday': lambda: estrai_romatoday(cfgl['romatoday'], v['nome'], scadenza)}[s]()
         except Exception as ex:
             tentato.append(f'{s}: errore {type(ex).__name__}')
             continue
@@ -344,10 +711,15 @@ def estrai_locale(v):
                 k = (e['data'], e['ora'], e['artista'].casefold())
                 if k not in visti: visti.add(k); dedup.append(e)
             dedup.sort(key=lambda e: (e['data'], e['ora']))
-            return dedup[:CAP], f'{s} · {len(dedup)} eventi', s
+            return dedup[:CAP], f'{s} · {len(dedup)} eventi' + (f' — {blocco}' if blocco else ''), s
         tentato.append(f'{s}: 0 eventi')
-    if not html0:
-        return [], 'sito non raggiungibile', None
+    if blocco and tentato:
+        return [], blocco + ' · fonti alternative: ' + '; '.join(tentato), None
+    if blocco:
+        return [], blocco, None
+    if not html0 and not tentato:
+        motivo = ERR_ULTIMO.get(url, 'causa non determinata')
+        return [], f'sito non raggiungibile ({motivo})', None
     return [], 'fonte non disponibile (' + '; '.join(tentato) + ')', None
 
 # ── main ─────────────────────────────────────────────────────
@@ -360,31 +732,34 @@ def main():
     with cf.ThreadPoolExecutor(PAR) as ex:
         risultati = dict(ex.map(lambda v: (v['id'], estrai_locale(v)), locali))
 
+    passati_eliminati = sum(1 for e in vecchi if e.get('data', '') < og)
     nuovi, report = [], []
     for v in locali:
         evs, stato, fonte = risultati.get(v['id'], ([], 'non elaborato', None))
-        passati  = [e for e in vecchi if e.get('venueId') == v['id'] and e.get('data', '') < og]
         presenti = [e for e in vecchi if e.get('venueId') == v['id'] and e.get('data', '') >= og]
         if evs:
-            nuovi.extend(passati + evs)
+            nuovi.extend(evs)
             report.append({'id': v['id'], 'nome': v['nome'], 'fonte': fonte, 'stato': 'ok',
                            'estratti': len(evs), 'rimossi_vecchi': len(presenti)})
             print(f"  ✔ {v['nome'][:34]:34} {stato}  (+{len(evs)} al posto di {len(presenti)})")
         else:
-            nuovi.extend(passati + presenti)
+            nuovi.extend(presenti)
             report.append({'id': v['id'], 'nome': v['nome'], 'fonte': None, 'stato': stato, 'estratti': 0})
             print(f"  · {v['nome'][:34]:34} {stato[:74]} — dati attuali invariati ({len(presenti)})")
 
+    nuovi = [e for e in nuovi if e['data'] >= og]   # doppia sicurezza: nessun evento passato
     nuovi.sort(key=lambda e: (e['data'], e['ora'], e['venueId']))
     ok = sum(1 for r in report if r['stato'] == 'ok')
 
     rep = {'eseguito_il': datetime.now(TZ).isoformat(timespec='seconds') if TZ else datetime.now().isoformat(timespec='seconds'),
            'giorni_avanzo': GG_MAX, 'locali_aggiornati': ok, 'locali_totali': len(report),
-           'eventi_totali': len(nuovi), 'dettaglio': report}
+           'eventi_totali': len(nuovi), 'eventi_passati_eliminati': passati_eliminati,
+           'dettaglio': report}
     (BASE / 'tools' / 'report.json').write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding='utf-8')
 
     righe = ['# Rapporto aggiornamento eventi SuonaRoma', '', f"- Eseguito il: **{rep['eseguito_il']}** (ora italiana)",
-             f"- Locali aggiornati: **{ok} / {len(report)}**", f"- Eventi totali in archivio: **{len(nuovi)}**", '', '| Locale | Fonte | Eventi |', '|---|---|---|']
+             f"- Locali aggiornati: **{ok} / {len(report)}**", f"- Eventi totali in archivio: **{len(nuovi)}** (solo da oggi in poi)",
+             f"- Eventi passati eliminati: **{passati_eliminati}**", '', '| Locale | Fonte / stato | Eventi |', '|---|---|---|']
     for r in report:
         righe.append(f"| {r['nome']} | {r['fonte'] or r['stato']} | {r['estratti']} |")
     (BASE / 'tools' / 'report.md').write_text('\n'.join(righe) + '\n', encoding='utf-8')

@@ -44,30 +44,83 @@ data/eventi.json e data/eventi.js con un commit automatico.
  · Il job viene controllato ogni ora e parte solo quando a Roma
    sono le 14:00: l'orario resta corretto anche al cambio ora
    legale/solare (il cron di GitHub usa UTC).
- · Per ogni locale prova in ordine:
+   L'avvio manuale (Run workflow) esegue l'estrazione a qualsiasi
+   ora, proprio per poter provare.
+ · Per ogni locale prova nell'ordine configurato (di default:
      1) feed iCal (.ics, tipico dei siti WordPress con The Events
-        Calendar — Auditorium, Casa del Jazz, Big Mama...)
+        Calendar)
      2) API REST The Events Calendar (/wp-json/tribe/...)
      3) dati strutturati schema.org (JSON-LD) nelle pagine eventi
- · La prima strategia che estrae eventi vince.
- · INTEGRAZIONE: per i locali estratti con successo, gli eventi
-   da oggi in avanti vengono SOSTITUITI con quelli freschi; il
-   passato resta come storico. I locali la cui fonte non risponde
-   NON vengono modificati (il sito non resta mai vuoto).
+     4) scansione generica del testo (riga data + riga artista)
+   Per alcuni locali sono configurati parser dedicati:
+     html_apm  → auditorium.com (schede event-card)
+     html_cdj  → casadeljazz.com (articoli WordPress)
+     html_wix  → alexanderplatzjazz.com (widget Eventi di Wix)
+   Fonti alternative quando il sito ufficiale è bloccato:
+     html_zero → zero.eu, pagina "luogo" del locale (JSON-LD eventi)
+     html_songkick → songkick.com, pagina venue del locale
+     html_romatoday → romatoday.it, pagina "location" del luogo
+ · La prima strategia che estrae eventi vince; il rapporto indica
+   sempre la fonte che ha prodotto gli eventi.
+ · Se il sito ufficiale è bloccato (challenge anti-bot, 403, IP
+   datacenter bloccati) si tentano le fonti alternative configurate
+   in config (zero.eu / songkick / romatoday); il rapporto indica
+   anche il motivo del blocco del sito ufficiale.
+ · Se la homepage non risponde si prova anche con/senza "www.".
+ · INTEGRAZIONE ("solo futuro"): l'archivio contiene SOLO eventi
+   da oggi in poi. Per i locali estratti con successo gli eventi
+   futuri vengono SOSTITUITI con quelli freschi; i locali la cui
+   fonte non risponde NON vengono modificati (il sito non resta
+   mai vuoto); gli eventi che diventano passati vengono eliminati
+   automaticamente a ogni esecuzione. L'estrazione copre 365
+   giorni avanti, fino a 120 eventi per locale.
  · Se i dati non cambiano, nessun commit (il repo resta pulito).
  · Il rapporto dell'ultima esecuzione è in tools/report.md e viene
    mostrato anche nella pagina dell'esecuzione di Actions.
 
-── LIMITI NOTI ─────────────────────────────────────────────
+── COME LEGGERE IL RAPPORTO (DIAGNOSI) ─────────────────────
 
- · I siti che caricano i contenuti solo via JavaScript (es.
-   Fonclea, Alexanderplatz) non si lasciano leggere con richieste
-   HTTP semplici: vengono segnalati nel rapporto come "fonte non
-   disponibile" e i loro dati restano invariati.
- · Facebook e Instagram non sono leggibili senza login: se un
-   locale usa solo i social, serve un sito ufficiale.
- · Alcuni siti bloccano i bot (es. protezioni Cloudflare): anche
-   in quel caso il locale viene semplicemente saltato.
+ · ok / "html_apm · 13 eventi"            — estrazione riuscita
+ · sito non raggiungibile (DNS: il
+   dominio non risolve)                   — l'indirizzo è sbagliato
+                                            o il dominio è stato
+                                            dismesso: serve il nuovo
+                                            URL ufficiale
+ · sito non raggiungibile (timeout)       — il server non risponde
+                                            (giù o troppo lento)
+ · sito non raggiungibile (HTTP 403)      — blocco anti-bot: il
+                                            sito rifiuta i client
+                                            non-browser
+ · pagina di verifica anti-bot
+   (challenge JavaScript)                 — protezione che richiede
+                                            un browser vero: non
+                                            aggirabile via HTTP
+ · risposta anomala del server            — risposte sospette
+                                            (es. HTTP 202 con corpo
+                                            quasi vuoto)
+ · fonte non disponibile (...)            — il sito risponde ma non
+                                            espone eventi leggibili
+ · disattivato: ...                       — locale escluso in config
+                                            (dominio morto, solo
+                                            social, ecc.)
+
+── LIMITI NOTI (aggiornati nov. 2026, v9) ──────────────────
+
+ · Challenge JavaScript (Cloudflare/openresty): Fonclea e L'Asino
+   che Vola restano illeggibili via HTTP e non hanno alternative;
+   Trenta Formiche e Monk sono coperti da zero.eu.
+ · Blocco anti-bot lato TLS/403: Geronimo's (geronimoslive.com);
+   largovenue.com diretto è 403 ma è coperto da zero.eu; Vinile e
+   Stazione Birra non aprono la connessione da IP datacenter.
+ · Nessuna fonte leggibile: Big Mama (sito in errore 500, eventi
+   solo su Facebook) e Argot (solo Instagram): disattivati in
+   config con il motivo.
+ · Siti su hosting italiano (Alcazar, Atlantico, Blackmarket, Lian,
+   Fanfulla) irraggiungibili da alcune reti datacenter: dal runner
+   GitHub potrebbero invece rispondere — il rapporto lo dirà.
+ · Al Muretto e L'Asino che Vola: la pagina zero.eu esiste ma a
+   nov. 2026 non elenca ancora eventi futuri.
+ · Facebook e Instagram non sono leggibili senza login.
  · Verifica sempre gli orari prima di pubblicare: l'estrazione è
    automatica e può sbagliare (soprattutto i generi, che sono
    stimati dalle parole nel titolo).
@@ -81,8 +134,10 @@ data/eventi.json e data/eventi.js con un commit automatico.
  · Usare un URL diverso per un locale:
      "4": { "url": "https://www.esempio.it", "attivo": true }
  · Limitare le strategie di un locale (ical, wp_json, jsonld,
-   html_apm — quest'ultimo è il parser dedicato ad auditorium.com):
+   html_testo, html_apm, html_cdj, html_wix):
      "3": { "strategie": ["ical"] }
+ · Orario predefinito per i siti che non pubblicano l'orario:
+     "22": { "ora_default": "21:30" }
 
 ── SITO IN SOTTOCARTELLA ───────────────────────────────────
 
@@ -95,7 +150,9 @@ data/eventi.json e data/eventi.js con un commit automatico.
 
 ── NOTE LEGALI / BONARIENZA ────────────────────────────────
 
- Lo script si limita a leggere pagine pubbliche, con User-Agent
- dichiarato, pausa tra le richieste e senza aggirare protezioni.
- Per un uso intensivo chiedi sempre ai locali il consenso o i
- dati in formato aperto (feed iCal gratuiti, se chiesti).
+ Lo script si limita a leggere pagine pubbliche, con pausa tra le
+ richieste e senza aggirare protezioni: usa uno User-Agent da
+ browser solo perché molti hosting bloccano con 403 qualsiasi
+ user-agent dichiaratosi bot. Per un uso intensivo chiedi sempre
+ ai locali il consenso o i dati in formato aperto (feed iCal
+ gratuiti, se chiesti).

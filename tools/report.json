@@ -1,16 +1,18 @@
 {
- "eseguito_il": "2026-11-03T13:07:44+01:00",
- "giorni_avanzo": 120,
- "locali_aggiornati": 1,
+ "eseguito_il": "2026-11-03T18:41:36+01:00",
+ "giorni_avanzo": 365,
+ "locali_aggiornati": 11,
  "locali_totali": 24,
- "eventi_totali": 647,
+ "eventi_totali": 121,
+ "eventi_passati_eliminati": 0,
  "dettaglio": [
   {
    "id": 1,
    "nome": "Alexanderplatz Jazz Club",
-   "fonte": null,
-   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: saltato (non WordPress); jsonld: 0 eventi)",
-   "estratti": 0
+   "fonte": "html_wix",
+   "stato": "ok",
+   "estratti": 10,
+   "rimossi_vecchi": 10
   },
   {
    "id": 2,
@@ -23,156 +25,165 @@
   {
    "id": 3,
    "nome": "Casa del Jazz",
-   "fonte": null,
-   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: 0 eventi; jsonld: 0 eventi)",
-   "estratti": 0
+   "fonte": "html_cdj",
+   "stato": "ok",
+   "estratti": 23,
+   "rimossi_vecchi": 23
   },
   {
    "id": 4,
    "nome": "Big Mama Blues Club",
    "fonte": null,
-   "stato": "disattivato: il dominio bigmama.it reindirizza a un sito non correlato al locale (accademiadeipazienti.org): serve un nuovo URL ufficiale",
+   "stato": "disattivato: bigmama.it risponde con errore HTTP 500 e il locale pubblica la programmazione solo su Facebook (@bigmamaroma), non leggibile senza login",
    "estratti": 0
   },
   {
    "id": 5,
    "nome": "Fonclea",
    "fonte": null,
-   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: saltato (non WordPress); jsonld: 0 eventi)",
+   "stato": "sito ufficiale protetto da verifica anti-bot (challenge JavaScript)",
    "estratti": 0
   },
   {
    "id": 6,
    "nome": "Largo Venue",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 4,
+   "rimossi_vecchi": 4
   },
   {
    "id": 7,
    "nome": "Vinile",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito non raggiungibile (timeout (nessuna risposta entro 15s))",
    "estratti": 0
   },
   {
    "id": 8,
    "nome": "Stazione Birra",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "fonte non disponibile (ical: 0 eventi; wp_json: saltato (non WordPress); jsonld: 0 eventi; html_testo: 0 eventi)",
    "estratti": 0
   },
   {
    "id": 9,
    "nome": "CrossRoads Live Club",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_songkick",
+   "stato": "ok",
+   "estratti": 1,
+   "rimossi_vecchi": 1
   },
   {
    "id": 10,
    "nome": "Geronimo's Live Music Club",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito non raggiungibile (HTTP 403 (blocco anti-bot o limite richieste))",
    "estratti": 0
   },
   {
    "id": 11,
    "nome": "Palazzo dello Sport (PalaEur)",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "fonte non disponibile (html_romatoday: 0 eventi)",
    "estratti": 0
   },
   {
    "id": 12,
    "nome": "Alcazar Live",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito non raggiungibile (rete non raggiungibile)",
    "estratti": 0
   },
   {
    "id": 13,
    "nome": "Atlantico Live",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito non raggiungibile (rete non raggiungibile)",
    "estratti": 0
   },
   {
    "id": 14,
    "nome": "Argot",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "disattivato: nessun sito ufficiale: il locale è presente solo su Instagram (@argot.speakeasy); nessuna fonte alternativa leggibile (non è su zero.eu)",
    "estratti": 0
   },
   {
    "id": 15,
    "nome": "Blackmarket Hall",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito non raggiungibile (rete non raggiungibile)",
    "estratti": 0
   },
   {
    "id": 16,
    "nome": "Lian Club",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito non raggiungibile (rete non raggiungibile)",
    "estratti": 0
   },
   {
    "id": 17,
    "nome": "Monk Club",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 14,
+   "rimossi_vecchi": 14
   },
   {
    "id": 18,
    "nome": "Fanfulla 5/a",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 27,
+   "rimossi_vecchi": 27
   },
   {
    "id": 19,
    "nome": "Al Muretto",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "fonte non disponibile (html_zero: 0 eventi)",
    "estratti": 0
   },
   {
    "id": 20,
    "nome": "Traffic Live",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 2,
+   "rimossi_vecchi": 2
   },
   {
    "id": 21,
    "nome": "Wishlist Club",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 2,
+   "rimossi_vecchi": 2
   },
   {
    "id": 22,
    "nome": "Orion Club",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 2,
+   "rimossi_vecchi": 2
   },
   {
    "id": 23,
    "nome": "L'Asino che Vola",
    "fonte": null,
-   "stato": "sito non raggiungibile",
+   "stato": "sito ufficiale protetto da verifica anti-bot (challenge JavaScript) · fonti alternative: html_zero: 0 eventi",
    "estratti": 0
   },
   {
    "id": 24,
    "nome": "Trenta Formiche",
-   "fonte": null,
-   "stato": "sito non raggiungibile",
-   "estratti": 0
+   "fonte": "html_zero",
+   "stato": "ok",
+   "estratti": 20,
+   "rimossi_vecchi": 20
   }
  ]
 }
