@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════
-// SuonaRoma v5 · app.js
+// SuonaRoma · app.js
 // Tutte le funzionalità della v2 + correzioni:
 //  · fallback dati via data/*.js quando il sito è aperto senza server (file://)
 //  · calendario che include anche oggi (il pulsante "Oggi" ora funziona)
@@ -68,6 +68,17 @@ async function loadData() {
 
 function getVenue(id) { return venues.find(v => v.id === id); }
 
+// ── v9 · locali senza informazioni ──
+// Un locale è "senza informazioni" quando l'archivio non ha eventi futuri
+// per esso: la fonte non è raggiungibile (blocco anti-bot, sito rotto,
+// solo social) o il locale non ha ancora pubblicato la programmazione.
+function venueHaEventi(id) {
+  return eventiTutti.some(e => e.venueId === id && e.data >= oggiStr());
+}
+function venueNADiv(cls) {
+  return `<div class="${cls}"><i class="fa fa-circle-info"></i> Informazioni non disponibili</div>`;
+}
+
 function dataErrorMsg() {
   return `<div class="data-error">
     <strong>Dati non disponibili</strong>
@@ -96,7 +107,7 @@ function buildEventCard(ev, idx, totalCount, extraTopLabel) {
     ? `<span class="booking-badge booking-yes" style="background:var(--accent)">🎟 Biglietti disponibili</span>`
     : `<span class="booking-badge ${ev.prenotazione?'booking-yes':'booking-no'}">${ev.prenotazione?'● Prenotazione richiesta':'○ Senza prenotazione'}</span>`;
   const topLabel = extraTopLabel
-    ? `<div class="event-num" style="color:var(--accent)">${extraTopLabel}</div>`
+    ? `<div class="event-date-label">${extraTopLabel}</div>`
     : '';
   const artista = ev.artista || ev.artist || '';
   const genere  = ev.genere  || ev.genre  || '';
@@ -164,7 +175,8 @@ function renderVenues(list) {
       <div class="vc-num">Nº ${String(venues.indexOf(v)+1).padStart(2,'0')} / ${String(venues.length).padStart(2,'0')}</div>
       <div class="vc-tag">${esc(v.tag)}</div>
       <div class="vc-name">${esc(v.nome)}</div>
-      ${v.descrizione ? `<div style="font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);line-height:1.6;margin-bottom:.8rem">${esc(v.descrizione)}</div>` : ''}
+      ${venueHaEventi(v.id) ? '' : venueNADiv('vc-na')}
+      ${v.descrizione ? `<div style="font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:1rem">${esc(v.descrizione)}</div>` : ''}
       <div class="vc-info">
         <div class="vc-row"><i class="fa fa-map-marker-alt"></i><span>${esc(v.indirizzo)}</span></div>
         <div class="vc-row"><i class="fa fa-phone"></i><a class="vc-phone" href="tel:${esc((v.telefono||'').replace(/\s/g,''))}">${esc(v.telefono)}</a></div>
@@ -353,7 +365,11 @@ function openVenuePanel(venueId) {
           </div>
         </div>`;
       }).join('')
-    : `<div style="padding:1.5rem 2rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted)">Nessun evento in archivio. Consulta il sito ufficiale.</div>`;
+    : `<div class="panel-na">
+        <div class="panel-na-tit">Informazioni non disponibili</div>
+        <div class="panel-na-txt">Al momento non riusciamo a recuperare la programmazione di questo locale.<br>Consulta il sito ufficiale o i canali social del locale:</div>
+        <a class="panel-na-link" href="${esc(v.website)}" target="_blank" rel="noopener">${esc(v.website.replace(/https?:\/\//,''))} <i class="fa fa-arrow-up-right-from-square"></i></a>
+       </div>`;
 
   document.getElementById('panel-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -565,6 +581,7 @@ function renderMappa() {
           <div class="mvi-name">${esc(v.nome)}</div>
           <div class="mvi-tag">${esc(v.tag)}</div>
           <div class="mvi-addr">${esc(v.indirizzo)}</div>
+          ${venueHaEventi(v.id) ? '' : venueNADiv('mvi-na')}
           <a class="mvi-phone" href="tel:${esc((v.telefono||'').replace(/\s/g,''))}" onclick="event.stopPropagation()">${esc(v.telefono)}</a>
           <div class="mvi-actions">
             <a class="mvi-btn mvi-btn-call" href="tel:${esc((v.telefono||'').replace(/\s/g,''))}" onclick="event.stopPropagation()"><i class="fa fa-phone"></i> Chiama</a>
@@ -639,3 +656,19 @@ function sendContatti() {
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape') closePanel();
 });
+
+// ── v10 · header compatto su mobile durante lo scroll ──
+// La barra del menu è sticky su tutte le pagine (css/style.css). Su
+// telefono, appena si scorre, la classe hdr-compatto richiude la riga
+// del logo e lascia in alto solo la barra di navigazione, per non
+// togliere spazio all'elenco degli eventi. Tornando in cima si riapre.
+// Su desktop la classe non ha effetto (il CSS è dentro la media query).
+let _hdrRaf = false;
+window.addEventListener('scroll', () => {
+  if(_hdrRaf) return;
+  _hdrRaf = true;
+  requestAnimationFrame(() => {
+    document.body.classList.toggle('hdr-compatto', window.scrollY > 70);
+    _hdrRaf = false;
+  });
+}, {passive:true});
