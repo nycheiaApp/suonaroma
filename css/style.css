@@ -1,9 +1,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--cream:#EFE7D2;--ink:#3d3f52;--muted:#7a7060;--border:#c8b99a;--card-bg:#f7f1e6;--accent:#C75B2A;}
+:root{--cream:#EFE7D2;--ink:#3d3f52;--muted:#7a7060;--border:#c8b99a;--card-bg:#f7f1e6;--accent:#C75B2A;--red:#C0392B;}
 body{background:var(--cream);color:var(--ink);font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;min-height:100vh}
 
 /* ── HEADER ── */
-header{border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:stretch;justify-content:space-between;}
+/* v10 · header sticky: il menu resta sempre visibile in alto durante
+   lo scorrimento, su tutte le pagine. z-index sopra alla mappa (Leaflet
+   usa z-index fino a 1000) e sotto al pannello laterale (2000). */
+header{border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:stretch;justify-content:space-between;position:sticky;top:0;z-index:1200;background:var(--cream)}
 .logo-block{padding:1.2rem 0;border-right:1px solid var(--border);padding-right:2rem;cursor:pointer}
 .logo-tag{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.3rem}
 .logo{font-family:Georgia, 'Times New Roman', serif;font-size:1.6rem;font-weight:700;letter-spacing:-.02em;line-height:1}
@@ -21,6 +24,12 @@ nav a:hover,nav a.active{color:var(--ink)}
 .hero-title{font-family:Georgia, 'Times New Roman', serif;font-size:3.5rem;font-weight:700;line-height:1.05;letter-spacing:-.03em}
 .hero-title em{color:var(--accent);font-style:italic}
 .hero-sub{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-top:.8rem;line-height:1.8}
+/* v10 · riga slogan + pulsante "segnala un locale" in homepage */
+.hero-sub-row{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;margin-top:.8rem}
+.hero-sub-row .hero-sub{margin-top:0}
+.hero-cta{font-family:'Courier New', Courier, monospace;font-size:11px;letter-spacing:.05em;color:var(--cream);background:var(--accent);padding:.7rem 1.1rem;text-decoration:none;transition:background .2s;display:inline-flex;align-items:center;gap:.55rem;line-height:1.4}
+.hero-cta i{font-size:10px}
+.hero-cta:hover{background:var(--ink)}
 .hero-stats{display:flex;gap:2rem;margin-top:1.5rem}
 .stat{text-align:center}
 .stat-n{font-family:Georgia, 'Times New Roman', serif;font-size:2rem;font-weight:700;display:block}
@@ -45,6 +54,9 @@ nav a:hover,nav a.active{color:var(--ink)}
 .event-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .25s}
 .event-card:hover::before{transform:scaleY(1)}
 .event-num{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:.5rem}
+/* v10 · data in evidenza sulle card con eventi di giorni diversi
+   (pagina Generi e Calendario): almeno la metà dell'orario (2.2rem) */
+.event-date-label{font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;font-weight:700;color:var(--accent);letter-spacing:-.02em;line-height:1;margin-bottom:.55rem}
 .event-time{font-family:Georgia, 'Times New Roman', serif;font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1}
 .event-artist{font-size:1.05rem;font-weight:600;margin:.5rem 0 .3rem;line-height:1.2}
 .event-genre-label{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem}
@@ -112,23 +124,26 @@ nav a:hover,nav a.active{color:var(--ink)}
 .locali-search-hint{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
 
 /* ── VENUE CARDS ── */
-.venues-grid{padding:2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--border)}
-.venue-card{background:var(--card-bg);padding:1.5rem;position:relative;overflow:hidden;transition:background .2s;}
+/* v10 · card locali raddoppiate: colonne larghe (min 600px), spaziature
+   e testi scalati di conseguenza; sfondo più chiaro dello standard ma
+   mai bianco */
+.venues-grid{padding:2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(600px,1fr));gap:1px;background:var(--border)}
+.venue-card{background:#FBF7EC;padding:2.5rem 2.75rem;position:relative;overflow:hidden;transition:background .2s;}
 .venue-card:hover{background:#fff}
 .venue-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .25s}
 .venue-card:hover::before{transform:scaleY(1)}
-.vc-num{font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:.4rem}
-.vc-tag{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
-.vc-name{font-family:Georgia, 'Times New Roman', serif;font-size:1.35rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:1rem}
-.vc-info{display:flex;flex-direction:column;gap:.5rem;border-top:1px solid var(--border);padding-top:1rem}
-.vc-row{display:flex;align-items:flex-start;gap:.6rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted)}
-.vc-row i{color:var(--ink);margin-top:1px;flex-shrink:0;width:12px}
-.vc-phone{color:var(--ink);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:11px;font-weight:600}
+.vc-num{font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--muted);letter-spacing:.1em;margin-bottom:.55rem}
+.vc-tag{font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.6rem}
+.vc-name{font-family:Georgia, 'Times New Roman', serif;font-size:2rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:1.1rem}
+.vc-info{display:flex;flex-direction:column;gap:.7rem;border-top:1px solid var(--border);padding-top:1.2rem;margin-top:.2rem}
+.vc-row{display:flex;align-items:flex-start;gap:.7rem;font-family:'Courier New', Courier, monospace;font-size:13px;color:var(--muted);line-height:1.5}
+.vc-row i{color:var(--ink);margin-top:2px;flex-shrink:0;width:14px}
+.vc-phone{color:var(--ink);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:13px;font-weight:600}
 .vc-phone:hover{color:var(--accent)}
-.vc-web{color:var(--accent);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:10px}
+.vc-web{color:var(--accent);text-decoration:none;font-family:'Courier New', Courier, monospace;font-size:12px}
 .vc-web:hover{text-decoration:underline}
-.vc-actions{display:flex;gap:.6rem;margin-top:1rem}
-.vc-btn{flex:1;padding:.55rem;font-family:'Courier New', Courier, monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;text-decoration:none;transition:background .2s,color .2s;}
+.vc-actions{display:flex;gap:.7rem;margin-top:1.3rem}
+.vc-btn{flex:1;padding:.8rem;font-family:'Courier New', Courier, monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;text-decoration:none;transition:background .2s,color .2s;}
 .vc-btn-call{background:var(--ink);color:var(--cream);border:1px solid var(--ink)}
 .vc-btn-call:hover{background:var(--accent);border-color:var(--accent)}
 .vc-btn-events,.vc-btn-share{background:transparent;color:var(--ink);border:1px solid var(--border)}
@@ -244,15 +259,27 @@ footer{border-top:1px solid var(--border);padding:1.2rem 2rem;display:flex;justi
 .footer-note{font-family:'Courier New', Courier, monospace;font-size:9px;color:var(--border);letter-spacing:.08em}
 
 /* ── RESPONSIVE ── */
+/* v10 · mobile: header sticky che si compatta allo scroll. La classe
+   hdr-compatto (aggiunta da js/app.js) richiude la riga del logo e
+   lascia in alto solo la barra di navigazione, con aree di tocco
+   ampie e scorrimento orizzontale se il testo non entra. */
 @media(max-width:600px){
   header{flex-wrap:wrap;padding:0 1rem}
   .header-right{display:none}
-  nav a{padding:0 .7rem;font-size:10px}
+  nav{width:100%;overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav a{padding:.6rem .7rem;font-size:10px;white-space:nowrap}
+  .logo-block{border-right:none;padding:.7rem 0;max-height:130px;overflow:hidden;transition:max-height .3s ease,padding .3s ease,opacity .2s ease}
+  .logo-tag{display:none}
+  body.hdr-compatto .logo-block{max-height:0;padding-top:0;padding-bottom:0;opacity:0}
   .hero,.page-hero,.generi-header{padding:1.5rem 1rem}
   .hero-title,.page-hero-title,.generi-title{font-size:2.2rem}
   .events-grid,.venues-grid{padding:1rem;grid-template-columns:1fr}
+  .venue-card{padding:1.6rem 1.4rem}
+  .vc-name{font-size:1.6rem}
   .section-bar,.generi-tags-wrap,.generi-results-bar{padding:.7rem 1rem}
   .side-panel{width:100vw}
+  .hero-sub-row{flex-direction:column;align-items:flex-start;gap:1rem}
 }
 
 /* ── EXTRA v3 ── */
@@ -261,3 +288,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .data-error strong{display:block;font-family:Georgia, 'Times New Roman', serif;font-size:1.3rem;color:var(--ink);margin-bottom:.6rem;letter-spacing:0}
 .data-error code{background:var(--card-bg);border:1px solid var(--border);padding:.15rem .5rem;letter-spacing:.02em}
 .mvi-empty{padding:2rem 1.5rem;font-family:'Courier New', Courier, monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;line-height:2;text-align:center}
+
+/* ── v9 · locali senza informazioni ── */
+/* Badge sulle card dei locali (pagina Locali ed elenco Mappa) e blocco
+   del pannello laterale quando l'archivio non ha eventi per il locale
+   (fonte non raggiungibile o programmazione non ancora pubblicata). */
+.vc-na,.mvi-na{display:flex;align-items:center;gap:.45rem;font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.55rem 0 .2rem}
+.vc-na i,.mvi-na i{color:var(--accent);font-size:9px}
+/* v10 · il badge scala con le card locali raddoppiate */
+.venue-card .vc-na{font-size:12px;gap:.55rem;margin:.7rem 0 .3rem}
+.venue-card .vc-na i{font-size:11px}
+/* v11 · il badge è in rosso (testo e icona) nella pagina Locali */
+.vc-na{color:var(--red)}
+.vc-na i{color:var(--red)}
+.panel-na{padding:2.2rem 2rem;text-align:center;border:1px dashed var(--border);margin:1.2rem;background:rgba(199,91,42,.04)}
+.panel-na-tit{font-family:Georgia,'Times New Roman',serif;font-size:1.15rem;color:var(--ink);margin-bottom:.6rem}
+.panel-na-txt{font-family:'Courier New',Courier,monospace;font-size:10.5px;color:var(--muted);line-height:1.8;margin-bottom:1rem}
+.panel-na-link{font-family:'Courier New',Courier,monospace;font-size:11px;color:var(--accent);text-decoration:underline;letter-spacing:.04em}
