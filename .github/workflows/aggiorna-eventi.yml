@@ -1,15 +1,23 @@
-# Aggiorna gli eventi di SuonaRoma ogni giorno alle 14:00 (ora italiana).
-# Il controllo avviene ogni ora e il job prosegue solo quando a Roma
-# sono le 14:00 — così l'ora esatta resta corretta anche al cambio
-# ora legale/solare (il cron di GitHub è in UTC).
+# Aggiorna gli eventi di SuonaRoma una volta al giorno: al primo run
+# delle 14:00 o successivo (ora italiana).
 #
-# Avvio manuale possibile dalla scheda Actions → "Aggiorna eventi" → Run workflow.
+# Perché ogni 30 minuti? GitHub spesso ritarda i run programmati di
+# 15-60 minuti e a volte salta ore intere (visti run alle 23:32,
+# 04:16, 12:57 — mai nella finestra voluta). Con il cron ogni 30
+# minuti e un guard "dalle 14:00 in poi" l'aggiornamento giornaliero
+# arriva comunque; un controllo sul rapporto dello stesso giorno
+# evita doppi aggiornamenti. L'orario resta corretto anche al cambio
+# ora legale/solare (il cron di GitHub è in UTC, il guard usa
+# l'orologio di Roma).
+#
+# Avvio manuale (sempre eseguito, a qualsiasi ora): scheda Actions →
+# "Aggiorna eventi" → Run workflow.
 
 name: Aggiorna eventi
 
 on:
   schedule:
-    - cron: '0 * * * *'          # ogni ora; il guard orario decide se eseguire
+    - cron: '0,30 * * * *'       # ogni 30 minuti; il guard decide se eseguire
   workflow_dispatch: {}          # avvio manuale
 
 permissions:
@@ -34,14 +42,21 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: È l'ora (14:00 a Roma)?
+      - name: Aggiornamento dovuto (dopo le 14:00 a Roma, non già fatto oggi)?
         id: orario
         run: |
           H=$(TZ=Europe/Rome date +%H)
-          echo "Ora italiana corrente: $H"
-          echo "esegui=$([[ "$H" == "14" ]] && echo sì || echo no)" >> "$GITHUB_OUTPUT"
+          OGGI=$(TZ=Europe/Rome date +%Y-%m-%d)
+          GIA=$(grep -qF "Eseguito il: **$OGGI" tools/report.md 2>/dev/null && echo sì || echo no)
+          echo "Ora italiana: ${H} — aggiornamento di oggi già eseguito: $GIA"
+          if [ "$H" -ge 14 ] && [ "$GIA" != "sì" ]; then
+            echo "esegui=sì" >> "$GITHUB_OUTPUT"
+          else
+            echo "esegui=no" >> "$GITHUB_OUTPUT"
+          fi
 
-      # L'estrazione parte alle 14:00 (ora di Roma) nei run programmati;
+      # Nei run programmati l'estrazione parte al primo slot dalle 14:00
+      # (ora di Roma) che trova l'aggiornamento di oggi non ancora fatto;
       # nei run manuali (workflow_dispatch) parte sempre, per i test.
       - name: Estrazione eventi dai siti dei locali
         if: steps.orario.outputs.esegui == 'sì' || github.event_name == 'workflow_dispatch'
