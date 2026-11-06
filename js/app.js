@@ -90,12 +90,58 @@ function dataErrorMsg() {
 }
 
 // ── INIT PAGINE ──
-async function initPaginaOggi()      { initDate(); await loadData(); renderEvents(); }
-async function initPaginaCalendario(){ initDate(); await loadData(); renderCalendario(); }
+async function initPaginaOggi()      { initDate(); await loadData(); renderEvents(); handleEvHash(); }
+async function initPaginaCalendario(){ initDate(); await loadData(); renderCalendario(); handleEvHash(); }
 async function initPaginaLocali()    { initDate(); await loadData(); renderVenues(); }
 async function initPaginaGeneri()    { initDate(); await loadData(); renderGenreTags(); }
 async function initPaginaMappa()     { initDate(); await loadData(); renderMappa(); }
 function  initPaginaContatti()       { initDate(); }
+
+// ── v13 · LINK DIRETTO A UN SINGOLO EVENTO (#ev=…) ──
+// Condividendo la scheda di un evento si trasmette l'indirizzo che
+// apre quel preciso evento (es. index.html#ev=1105-2100-k3f9), non
+// più la pagina generica. Il codice è stabile: data, ora, locale e
+// artista. Chi apre il link vede la card evidenziata; se l'evento
+// non è di oggi viene portato al calendario, sulla data giusta.
+function evId(ev) {
+  const base = `${ev.data||''}|${ev.ora||''}|${ev.venueId ?? ''}|${(ev.artista||ev.artist||'').toLowerCase()}`;
+  let h = 0;
+  for(let i = 0; i < base.length; i++) h = (h * 31 + base.charCodeAt(i)) >>> 0;
+  return `${(ev.data||'').slice(5).replace('-','')}-${(ev.ora||'').replace(':','')}-${h.toString(36)}`;
+}
+function evById(id) { return eventiTutti.find(e => evId(e) === id); }
+function evFlashCard(id) {
+  const el = document.querySelector(`[data-evid="${id}"]`);
+  if(!el) return false;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.classList.add('ev-flash');
+  setTimeout(() => el.classList.remove('ev-flash'), 5200);
+  return true;
+}
+function handleEvHash() {
+  const m = (location.hash || '').match(/^#ev=([A-Za-z0-9-]+)$/);
+  if(!m) return;
+  const ev = evById(m[1]);
+  if(!ev) return;                       // evento più in archivio: resta la pagina normale
+  if(document.getElementById('cal-events-grid')) {
+    // pagina CALENDARIO: porta la selezione sulla data dell'evento
+    if(calSelectedDate !== ev.data) {
+      calSelectedDate = ev.data;
+      const inp = document.getElementById('cal-date-input');
+      if(inp) inp.value = ev.data;
+      _renderCalResults();
+    }
+    setTimeout(() => evFlashCard(m[1]), 150);
+  } else if(ev.data === oggiStr()) {
+    // HOME: evento di oggi → evidenzia la scheda
+    setTimeout(() => evFlashCard(m[1]), 150);
+  } else {
+    // HOME: evento di un altro giorno → calendario sulla data giusta
+    location.replace('calendario.html#ev=' + m[1]);
+  }
+}
+// se l'hash cambia mentre la pagina è già aperta (navigazione interna)
+window.addEventListener('hashchange', handleEvHash);
 
 // ── CARD EVENTO (riusabile) ──
 function buildEventCard(ev, idx, totalCount, extraTopLabel) {
@@ -111,7 +157,7 @@ function buildEventCard(ev, idx, totalCount, extraTopLabel) {
     : '';
   const artista = ev.artista || ev.artist || '';
   const genere  = ev.genere  || ev.genre  || '';
-  return `<div class="event-card" onclick="${vClick}">
+  return `<div class="event-card" data-evid="${evId(ev)}" onclick="${vClick}">
     ${topLabel}
     <div class="event-num">Nº ${String(idx+1).padStart(2,'0')} / ${String(totalCount).padStart(2,'0')}</div>
     <div class="event-time">${esc(ev.ora)}</div>
@@ -126,7 +172,7 @@ function buildEventCard(ev, idx, totalCount, extraTopLabel) {
       <div class="event-meta-row"><i class="fa fa-map-marker-alt"></i><span>${esc(vAddr)}</span></div>
       <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.2rem">
         ${badge}
-        <button onclick="event.stopPropagation();shareEventCard(${v?v.id:'null'},this,'${escJs(artista)}','${escJs(genere)}','${escJs(ev.ora)}')" class="card-share-btn"><i class="fa fa-share-nodes"></i> Condividi</button>
+        <button onclick="event.stopPropagation();shareEventCard(${v?v.id:'null'},this,'${escJs(artista)}','${escJs(genere)}','${escJs(ev.ora)}','${evId(ev)}')" class="card-share-btn"><i class="fa fa-share-nodes"></i> Condividi</button>
       </div>
     </div>
   </div>`;
@@ -176,7 +222,7 @@ function renderVenues(list) {
       <div class="vc-tag">${esc(v.tag)}</div>
       <div class="vc-name">${esc(v.nome)}</div>
       ${venueHaEventi(v.id) ? '' : venueNADiv('vc-na')}
-      ${v.descrizione ? `<div style="font-family:'Courier New', Courier, monospace;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:1rem">${esc(v.descrizione)}</div>` : ''}
+      ${v.descrizione ? `<div style="font-family:'Courier New', Courier, monospace;font-size:10px;color:var(--muted);line-height:1.6;margin-bottom:.8rem">${esc(v.descrizione)}</div>` : ''}
       <div class="vc-info">
         <div class="vc-row"><i class="fa fa-map-marker-alt"></i><span>${esc(v.indirizzo)}</span></div>
         <div class="vc-row"><i class="fa fa-phone"></i><a class="vc-phone" href="tel:${esc((v.telefono||'').replace(/\s/g,''))}">${esc(v.telefono)}</a></div>
@@ -433,13 +479,19 @@ function shareVenueCard(venueId, btn) {
   doShare(v.nome, text, v.website, btn);
 }
 
-function shareEventCard(venueId, btn, artista, genere, ora) {
+// v13 · la condivisione di una scheda evento trasmette il link diretto
+// all'evento (#ev=…), non più il sito del locale. Su file:// (sito
+// aperto senza server) non esiste un indirizzo pubblico: si trasmette
+// allora il sito del locale come prima.
+function shareEventCard(venueId, btn, artista, genere, ora, evid) {
   const v = venueId ? getVenue(venueId) : null;
   const vName = v ? v.nome : '';
   const vAddr = v ? v.indirizzo : '';
   const vUrl  = v ? v.website : '#';
-  const text = `🎵 ${artista}\n🎼 ${genere}\n🕐 ore ${ora}\n📍 ${vName}\n🗺 ${vAddr}\n🌐 ${vUrl}`;
-  doShare(`${artista}${vName?' – '+vName:''}`, text, vUrl, btn);
+  const link  = (location.protocol === 'http:' || location.protocol === 'https:')
+              ? `${location.origin}${location.pathname}#ev=${evid}` : '';
+  const text = `🎵 ${artista}\n🎼 ${genere}\n🕐 ore ${ora}\n📍 ${vName}\n🗺 ${vAddr}${link ? `\n🔗 ${link}` : ''}`;
+  doShare(`${artista}${vName?' – '+vName:''}`, text, link || vUrl, btn);
 }
 
 // ── TILE DELLA MAPPA · fallback automatico (novità v5) ──
@@ -619,6 +671,12 @@ function renderMappa() {
       marker.on('click', () => selectMapVenue(v.id, false));
       mapMarkers[v.id] = {marker, customIcon, activeIcon};
     });
+    // v13 · la mappa si ridimensiona da sola alla rotazione del
+    // dispositivo (iPad Safari non avvisa sempre Leaflet del cambio)
+    if(window.ResizeObserver){
+      new ResizeObserver(() => leafletMap.invalidateSize()).observe(document.getElementById('leaflet-map'));
+    }
+    window.addEventListener('orientationchange', () => setTimeout(() => leafletMap.invalidateSize(), 400));
   }, 100);
 }
 
@@ -672,3 +730,21 @@ window.addEventListener('scroll', () => {
     _hdrRaf = false;
   });
 }, {passive:true});
+
+// ── v13 · altezza header reale come variabile CSS ──
+// La mappa e la pagina contatti calcolano la loro altezza sottraendo
+// l'header (e il footer) dallo schermo; le altezze vere vengono
+// misurate qui e messe in --hdr-h e --ftr-h, così restano corrette
+// su ogni dispositivo e dopo la rotazione dello schermo.
+function aggiornaHdrH(){
+  const h = document.querySelector('header');
+  if(h) document.documentElement.style.setProperty('--hdr-h', h.offsetHeight + 'px');
+  const f = document.querySelector('footer');
+  document.documentElement.style.setProperty('--ftr-h', (f ? f.offsetHeight : 0) + 'px');
+}
+aggiornaHdrH();
+// i web font cambiano l'altezza dell'header: si rimisura a fine load
+window.addEventListener('load', aggiornaHdrH);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(aggiornaHdrH);
+window.addEventListener('resize', aggiornaHdrH);
+window.addEventListener('orientationchange', () => setTimeout(aggiornaHdrH, 350));
