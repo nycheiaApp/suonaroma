@@ -1,10 +1,10 @@
 {
- "eseguito_il": "2026-11-06T18:38:28+01:00",
+ "eseguito_il": "2026-11-07T17:04:46+01:00",
  "giorni_avanzo": 365,
  "locali_aggiornati": 16,
  "locali_totali": 24,
- "eventi_totali": 140,
- "eventi_passati_eliminati": 11,
+ "eventi_totali": 135,
+ "eventi_passati_eliminati": 9,
  "doppioni_fusi": 0,
  "dettaglio": [
   {
@@ -12,16 +12,16 @@
    "nome": "Alexanderplatz Jazz Club",
    "fonte": "html_wix",
    "stato": "ok",
-   "estratti": 7,
-   "rimossi_vecchi": 7
+   "estratti": 6,
+   "rimossi_vecchi": 6
   },
   {
    "id": 2,
    "nome": "Auditorium Parco della Musica",
    "fonte": "html_apm",
    "stato": "ok",
-   "estratti": 13,
-   "rimossi_vecchi": 12
+   "estratti": 15,
+   "rimossi_vecchi": 11
   },
   {
    "id": 3,
@@ -73,8 +73,8 @@
    "nome": "CrossRoads Live Club",
    "fonte": "ical",
    "stato": "ok",
-   "estratti": 16,
-   "rimossi_vecchi": 16
+   "estratti": 15,
+   "rimossi_vecchi": 15
   },
   {
    "id": 10,
@@ -97,8 +97,8 @@
    "nome": "Alcazar Live",
    "fonte": "html_zero",
    "stato": "ok",
-   "estratti": 6,
-   "rimossi_vecchi": 6
+   "estratti": 3,
+   "rimossi_vecchi": 4
   },
   {
    "id": 13,
@@ -142,8 +142,8 @@
    "nome": "Fanfulla 5/a",
    "fonte": "html_zero",
    "stato": "ok",
-   "estratti": 24,
-   "rimossi_vecchi": 24
+   "estratti": 23,
+   "rimossi_vecchi": 23
   },
   {
    "id": 19,
@@ -188,7 +188,7 @@
    "nome": "Trenta Formiche",
    "fonte": "html_zero",
    "stato": "ok",
-   "estratti": 18,
+   "estratti": 17,
    "rimossi_vecchi": 18
   }
  ]
