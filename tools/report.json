@@ -1,10 +1,10 @@
 {
- "eseguito_il": "2026-11-08T18:11:59+01:00",
+ "eseguito_il": "2026-11-09T20:00:26+01:00",
  "giorni_avanzo": 365,
  "locali_aggiornati": 16,
  "locali_totali": 24,
- "eventi_totali": 131,
- "eventi_passati_eliminati": 9,
+ "eventi_totali": 128,
+ "eventi_passati_eliminati": 8,
  "doppioni_fusi": 0,
  "dettaglio": [
   {
@@ -12,15 +12,15 @@
    "nome": "Alexanderplatz Jazz Club",
    "fonte": "html_wix",
    "stato": "ok",
-   "estratti": 8,
-   "rimossi_vecchi": 5
+   "estratti": 9,
+   "rimossi_vecchi": 7
   },
   {
    "id": 2,
    "nome": "Auditorium Parco della Musica",
    "fonte": "html_apm",
    "stato": "ok",
-   "estratti": 15,
+   "estratti": 16,
    "rimossi_vecchi": 14
   },
   {
@@ -28,8 +28,8 @@
    "nome": "Casa del Jazz",
    "fonte": "html_cdj",
    "stato": "ok",
-   "estratti": 22,
-   "rimossi_vecchi": 22
+   "estratti": 21,
+   "rimossi_vecchi": 21
   },
   {
    "id": 4,
@@ -73,8 +73,8 @@
    "nome": "CrossRoads Live Club",
    "fonte": "ical",
    "stato": "ok",
-   "estratti": 14,
-   "rimossi_vecchi": 14
+   "estratti": 13,
+   "rimossi_vecchi": 13
   },
   {
    "id": 10,
@@ -103,9 +103,9 @@
   {
    "id": 13,
    "nome": "Atlantico Live",
-   "fonte": "html_atlantico",
+   "fonte": "html_zero",
    "stato": "ok",
-   "estratti": 2,
+   "estratti": 1,
    "rimossi_vecchi": 2
   },
   {
@@ -134,16 +134,16 @@
    "nome": "Monk Club",
    "fonte": "html_zero",
    "stato": "ok",
-   "estratti": 11,
-   "rimossi_vecchi": 12
+   "estratti": 10,
+   "rimossi_vecchi": 10
   },
   {
    "id": 18,
    "nome": "Fanfulla 5/a",
    "fonte": "html_zero",
    "stato": "ok",
-   "estratti": 22,
-   "rimossi_vecchi": 22
+   "estratti": 21,
+   "rimossi_vecchi": 21
   },
   {
    "id": 19,
